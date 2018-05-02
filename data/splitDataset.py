@@ -1,6 +1,7 @@
 '''
-creates fixed test set
+returns MRI indices for fixed train, valid and test set
 '''
+
 import pandas as pd
 import numpy as np
 import itertools
