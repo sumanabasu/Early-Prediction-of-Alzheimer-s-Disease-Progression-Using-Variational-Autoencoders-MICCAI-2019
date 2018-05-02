@@ -2,16 +2,17 @@
 This code finds labels for each of the 3D MRI and stores the MRI filenames and corresponding labels in a csv file
 '''
 
-import os
-import pandas as pd
-from datetime import datetime
 import glob
+import os
 import re
-import pdb
-import numpy as np
+from datetime import datetime
 
-path = '/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/Data Info/'
-file_name = 'DXSUM_PDXCONV_ADNIALL.csv'
+import numpy as np
+import pandas as pd
+from paths import paths, file_names
+
+path = paths['data']['ADNI_study_data_oroginal_labels']
+file_name = file_names['data']['ADNI_study_data_oroginal_labels']
 
 img_loc = '/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/ADNI_mnc/*.mnc'
 all_imgs = glob.glob(img_loc)
@@ -88,6 +89,9 @@ for idx, row in df.iterrows():
 				files.remove(selected_files[np.argmin(diff)])
 
 # Store data in new csv file
-df_new = df_new[[
-	columns[0], columns[1], columns[2], columns[3], columns[4], columns[5], columns[6], columns[7], columns[8]]]
-df_new.to_csv('/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/labels.csv')
+df_new = df_new[[columns[0], columns[1], columns[2], columns[3], columns[4],
+				 columns[5], columns[6], columns[7], columns[8]]]
+
+df_new.to_csv(os.path.join(paths['data']['MRI_to_curr_label_mapping'],
+						   file_names['output']['MRI_to_curr_label_mapping']))
+
