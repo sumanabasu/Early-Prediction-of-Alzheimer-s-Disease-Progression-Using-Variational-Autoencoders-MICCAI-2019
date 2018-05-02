@@ -92,6 +92,6 @@ for idx, row in df.iterrows():
 df_new = df_new[[columns[0], columns[1], columns[2], columns[3], columns[4],
 				 columns[5], columns[6], columns[7], columns[8]]]
 
-df_new.to_csv(os.path.join(paths['data']['MRI_to_curr_label_mapping'],
-						   file_names['output']['MRI_to_curr_label_mapping']))
+df_new.to_csv(os.path.join(paths['data']['Input_to_Training_Model'],
+						   file_names['data']['MRI_to_curr_label_mapping']))
 
