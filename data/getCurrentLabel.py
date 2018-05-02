@@ -14,7 +14,7 @@ from paths import paths, file_names
 path = paths['data']['ADNI_study_data_oroginal_labels']
 file_name = file_names['data']['ADNI_study_data_oroginal_labels']
 
-img_loc = '/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/ADNI_mnc/*.mnc'
+img_loc = paths['data']['Raw_MRI_location']
 all_imgs = glob.glob(img_loc)
 
 columns = ['FileName', 'Phase', 'RID', 'VISCODE', 'VISCODE2', 'EXAMDATE', 'DXCURREN', 'DXCHANGE', 'DIAGNOSIS_LABEL']
