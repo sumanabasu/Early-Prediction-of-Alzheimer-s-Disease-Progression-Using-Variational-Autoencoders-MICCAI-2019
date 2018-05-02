@@ -5,14 +5,15 @@ import pandas as pd
 import numpy as np
 import itertools
 import cPickle
+import os
+from paths import paths, file_names
 
 def getTrainValidTestSplit(label_file,
 						   rid_file,
 						   shuffle,
 						   random_seed,
 						   train_size=0.6,
-						   valid_size=0.2,
-						   test_size=0.2):
+						   valid_size=0.2):
 	# Read MRI to next label mapping as dataframe
 	df = pd.read_csv(label_file)
 	rid = rid = cPickle.load(open(rid_file, 'r'))
@@ -46,8 +47,25 @@ def getTrainValidTestSplit(label_file,
 			len(rid_keys[valid_split_end:]), len(train_idx), len(valid_idx), len(test_idx)))
 	
 	# Save indices of each set in 3dMRItoNextLabel.csv file
+	pkl_file = open(os.path.join(paths['data']['Input_to_Training_Model'], file_names['data']['Train_set_indices']),
+					'wb')
+	cPickle.dump(train_idx, pkl_file)
+	pkl_file.close()
 	
-getTrainValidTestSplit(label_file='/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/3dMRItoNextLabel.csv',
-					   rid_file='/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/RIDtoMRIdict.pkl',
+	pkl_file = open(os.path.join(paths['data']['Input_to_Training_Model'], file_names['data']['Valid_set_indices']),
+					'wb')
+	cPickle.dump(valid_idx, pkl_file)
+	pkl_file.close()
+	
+	pkl_file = open(os.path.join(paths['data']['Input_to_Training_Model'], file_names['data']['Test_set_indices']),
+					'wb')
+	cPickle.dump(test_idx, pkl_file)
+	pkl_file.close()
+	
+	
+getTrainValidTestSplit(label_file=os.path.join(paths['data']['Input_to_Training_Model'],
+											   file_names['data']['MRI_to_next_label_mapping']),
+					   rid_file=os.path.join(paths['data']['Input_to_Training_Model'],
+											 file_names['data']['RIDtoMRI']),
 					   shuffle=True,
-					   random_seed=20)
+					   random_seed=200)
