@@ -3,11 +3,17 @@ from paths import paths, file_names
 from dataLoader import dataLoader
 from cnn import CnnVanilla
 from train import Trainer
+import time
 
 def main():
-	#TODO: create the experiments dirs
+	# create the experiments dirs
+	timestr = time.strftime("%Y%m%d-%H%M%S")
+	base_folder = paths['output']['base_folder']
+	expt_folder = base_folder + timestr
+	if not os.path.exists(expt_folder):
+		os.mkdir(expt_folder)
 
-	#TODO: create an instance of the model you want
+	# create an instance of the model you want
 	model = CnnVanilla()
 
 	# create your data generator
@@ -15,9 +21,10 @@ def main():
 	train_loader, valid_loader, test_loader = dataLoader(datafile)
 
 	# create trainer and pass all required components to it
-	trainer = Trainer(model, train_loader)
+	trainer = Trainer(model, train_loader, valid_loader, expt_folder)
 
 	# train your model
+	trainer.train()
 		
 if __name__ == '__main__':
 	main()
