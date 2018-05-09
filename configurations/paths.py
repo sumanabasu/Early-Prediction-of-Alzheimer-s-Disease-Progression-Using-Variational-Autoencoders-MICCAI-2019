@@ -26,5 +26,12 @@ file_names = {
 		'Train_set_indices'						: 	'train_set_indices.pkl',
 		'Valid_set_indices'						: 	'valid_set_indices.pkl',
 		'Test_set_indices'						: 	'test_set_indices.pkl'
+	},
+	'output'	:	{
+		'parameters'							:	'parameters.json',
+		'train_loss'							:	'train_loss.pkl',
+		'valid_loss'							:	'valid_loss.pkl',
+		'train_acc'								:	'train_accuracy.pkl',
+		'valid_acc'								:	'valid_accuracy.pkl'
 	}
 }
