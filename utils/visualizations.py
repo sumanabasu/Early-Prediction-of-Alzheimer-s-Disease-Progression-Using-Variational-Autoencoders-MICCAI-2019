@@ -12,6 +12,7 @@ import numpy as np
 
 def plot_confusion_matrix(actual_labels,
 						  predicted_labels,
+						  location,
 						  classes = np.asarray(['NL', 'MCI', 'AD']),
 						  normalize=False,
 						  title='Confusion matrix',
@@ -49,10 +50,10 @@ def plot_confusion_matrix(actual_labels,
 	plt.ylabel('True label')
 	plt.xlabel('Predicted label')
 	
-	plt.savefig(os.path.join(paths['output']['base_folder'], title))
+	plt.savefig(os.path.join(location, title))
 
 
-def plot_accuracy(train_acc, test_acc, title='Accuracy'):
+def plot_accuracy(train_acc, test_acc, location, title='Accuracy'):
 	"""
     This function plots accuracy over epochs.
     """
@@ -68,4 +69,4 @@ def plot_accuracy(train_acc, test_acc, title='Accuracy'):
 	plt.title(title)
 	plt.legend()
 	
-	plt.savefig(os.path.join(paths['output']['base_folder'], title))
+	plt.savefig(os.path.join(location, title))
