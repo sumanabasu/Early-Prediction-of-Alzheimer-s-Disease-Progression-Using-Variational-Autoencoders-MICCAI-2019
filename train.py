@@ -153,12 +153,11 @@ class Trainer(object):
 																					 'Valid)')
 	
 	def test(self, test_loader):
-		# TODO : implement test
 		correct, actual_labels, predicted_labels, test_losses = ([] for i in range(4))
 		
 		pb = tqdm(total=len(self.valid_loader))
 		
-		for i, (images, labels) in enumerate(self.valid_loader):
+		for i, (images, labels) in enumerate(test_loader):
 			img = Variable(images, volatile=True).cuda()
 			outputs = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
