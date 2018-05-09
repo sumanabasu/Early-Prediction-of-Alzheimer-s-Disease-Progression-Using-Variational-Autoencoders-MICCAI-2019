@@ -5,11 +5,11 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from modelConfig import params
-import math
 from tqdm import tqdm
 import numpy as np
 from visualizations import plot_confusion_matrix, plot_accuracy
 from tensorboardX import SummaryWriter
+from save import saveModelandMetrics
 
 class Trainer(object):
 	def __init__(self, model, train_loader, valid_loader, expt_folder):
@@ -29,11 +29,11 @@ class Trainer(object):
 		self.expt_folder = expt_folder
 		self.writer = SummaryWriter(log_dir=expt_folder)
 		
-		self.valid_losses, self.valid_accuracy = ([] for i in range(2))
+		self.train_losses, self.valid_losses, self.train_accuracy, self.valid_accuracy = ([] for i in range(4))
 	
 	def train(self):
-		train_losses = []
-		train_accuracy = []
+		#train_losses = []
+		#train_accuracy = []
 		
 		for _ in range(params['train']['num_epochs']):
 			print('Training...\nEpoch : '+str(_))
@@ -42,17 +42,17 @@ class Trainer(object):
 			# Train Model
 			accuracy, loss = self.trainEpoch()
 			
-			train_losses.append(loss)
-			train_accuracy.append(accuracy)
+			self.train_losses.append(loss)
+			self.train_accuracy.append(accuracy)
 			
 			# Validate Model
 			print ('Validation...')
 			self.model.eval()
 			self.validate()
 			
-			# TODO : Save model
-		
-			# TODO : Save accuracy and loss to disk
+			# Save model
+			saveModelandMetrics(self)
+			# TODO : Stop learning if model doesn't improve for 10 epochs --> Save best model
 	
 	def trainEpoch(self):
 		pbt = tqdm(total=len(self.train_loader))
@@ -77,8 +77,10 @@ class Trainer(object):
 		self.writer.add_scalar('train_accuracy', np.mean(minibatch_accuracy), self.curr_epoch)
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(actual_labels, predicted_labels, title='Confusion matrix, without normalization (Train)')
-		plot_confusion_matrix(actual_labels, predicted_labels, normalize=True, title='Normalized confusion matrix ('
+		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, title='Confusion matrix, ' \
+																			  'without normalization (Train)')
+		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, normalize=True, \
+																							   title='Normalized confusion matrix ('
 																					 'Train)')
 		
 		return (np.mean(minibatch_accuracy), np.mean(minibatch_losses))
@@ -148,8 +150,10 @@ class Trainer(object):
 		self.writer.add_scalar('validation_loss', np.mean(self.valid_losses), self.curr_epoch)
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(actual_labels, predicted_labels, title='Confusion matrix, without normalization (Valid)')
-		plot_confusion_matrix(actual_labels, predicted_labels, normalize=True, title='Normalized confusion matrix ('
+		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, title='Confusion matrix, ' \
+																			  'without normalization (Valid)')
+		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, normalize=True, \
+																							   title='Normalized confusion matrix ('
 																					 'Valid)')
 	
 	def test(self, test_loader):
@@ -179,6 +183,10 @@ class Trainer(object):
 		print('Test Losses : %0.6f' % np.mean(test_losses))
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(actual_labels, predicted_labels, title='Confusion matrix, without normalization (Test)')
-		plot_confusion_matrix(actual_labels, predicted_labels, normalize=True, title='Normalized confusion matrix ('
+		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, title='Confusion matrix, ' \
+																			  'without normalization (Test)')
+		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, normalize=True, \
+																							   title='Normalized confusion '
+																						  'matrix ('
 																					 'Test)')
+		
