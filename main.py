@@ -12,12 +12,14 @@ def main():
 	expt_folder = base_folder + timestr
 	if not os.path.exists(expt_folder):
 		os.mkdir(expt_folder)
+		
+	print('Run : {}\n'.format(timestr))
 
 	# create an instance of the model you want
 	model = CnnVanilla()
 
 	# create your data generator
-	datafile = os.path.join(paths['data']['hadf5_path'], file_names['data']['hdf5_file'])
+	datafile = os.path.join(paths['data']['hdf5_path'], file_names['data']['hdf5_file'])
 	train_loader, valid_loader, test_loader = dataLoader(datafile)
 
 	# create trainer and pass all required components to it
@@ -25,6 +27,9 @@ def main():
 
 	# train your model
 	trainer.train()
+	
+	# test model
+	trainer.test(test_loader)
 		
 if __name__ == '__main__':
 	main()
