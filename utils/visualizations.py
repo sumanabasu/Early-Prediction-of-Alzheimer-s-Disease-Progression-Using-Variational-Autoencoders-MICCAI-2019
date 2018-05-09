@@ -1,12 +1,18 @@
 '''
 Collection of visualization functions
 '''
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import os
 import itertools
 from paths import paths
+from sklearn.metrics import confusion_matrix
+import numpy as np
 
-def plot_confusion_matrix(cm, classes,
+def plot_confusion_matrix(actual_labels,
+						  predicted_labels,
+						  classes = np.asarray(['NL', 'MCI', 'AD']),
 						  normalize=False,
 						  title='Confusion matrix',
 						  cmap=plt.cm.Blues):
@@ -14,6 +20,9 @@ def plot_confusion_matrix(cm, classes,
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     """
+	
+	cm = confusion_matrix(actual_labels, predicted_labels)
+	
 	if normalize:
 		cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 		print("Normalized confusion matrix")
@@ -40,7 +49,7 @@ def plot_confusion_matrix(cm, classes,
 	plt.ylabel('True label')
 	plt.xlabel('Predicted label')
 	
-	plt.savefig(os.path.join(paths['output']['figures'], title))
+	plt.savefig(os.path.join(paths['output']['base_folder'], title))
 
 
 def plot_accuracy(train_acc, test_acc, title='Accuracy'):
@@ -59,4 +68,4 @@ def plot_accuracy(train_acc, test_acc, title='Accuracy'):
 	plt.title(title)
 	plt.legend()
 	
-	plt.savefig(os.path.join(paths['output']['figures'], title))
+	plt.savefig(os.path.join(paths['output']['base_folder'], title))
