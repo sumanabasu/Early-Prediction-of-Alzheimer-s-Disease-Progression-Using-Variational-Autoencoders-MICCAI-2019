@@ -1,4 +1,4 @@
-'''
+''''
 train model
 '''
 import torch
@@ -18,15 +18,18 @@ class Trainer(object):
 		if torch.cuda.is_available():
 			self.model = model.cuda()
 			
-		self.train_loader = train_loader
+		self.train_loader = valid_loader #train_loader #  TODO : fix train_loader
 		self.valid_loader = valid_loader
 		self.optimizer = torch.optim.Adam(model.parameters(),
 										  lr=params['train']['learning_rate'])
 		self.criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
 		self.curr_epoch = 0
+		self.batchstep = 0
 		
 		self.expt_folder = expt_folder
 		self.writer = SummaryWriter(log_dir=expt_folder)
+		
+		self.valid_losses, self.valid_accuracy = ([] for i in range(2))
 	
 	def train(self):
 		train_losses = []
@@ -52,17 +55,17 @@ class Trainer(object):
 			# TODO : Save accuracy and loss to disk
 	
 	def trainEpoch(self):
-		pbt = tqdm(total=int(math.ceil((1.0 * len(self.train_loader)) / params['train']['batch_size'])))
+		pbt = tqdm(total=len(self.train_loader))
 		
-		minibacth_losses, minibacth_accuracy, actual_labels, predicted_labels = ([] for i in range(4))
+		minibatch_losses, minibatch_accuracy, actual_labels, predicted_labels = ([] for i in range(4))
 		
 		for batch_idx, (images, labels) in enumerate(self.train_loader):
 			accuracy, loss, pred_labels = self.trainBatch(batch_idx, images, labels)
 			
-			minibacth_losses.append(loss)
-			minibacth_accuracy.append(accuracy)
+			minibatch_losses.append(loss)
+			minibatch_accuracy.append(accuracy)
 			
-			actual_labels.extend(labels.data.cpu().numpy())
+			actual_labels.extend(labels)
 			predicted_labels.extend(pred_labels)
 			
 			pbt.update(1)
@@ -70,15 +73,15 @@ class Trainer(object):
 		pbt.close()
 			
 		# Plot losses
-		self.writer.add_scalar('train_loss', np.mean(minibacth_losses), self.curr_epoch)
-		self.writer.add_scalar('train_accuracy', np.mean(minibacth_accuracy), self.curr_epoch)
+		self.writer.add_scalar('train_loss', np.mean(minibatch_losses), self.curr_epoch)
+		self.writer.add_scalar('train_accuracy', np.mean(minibatch_accuracy), self.curr_epoch)
 		
 		# Plot confusion matrices
 		plot_confusion_matrix(actual_labels, predicted_labels, title='Confusion matrix, without normalization (Train)')
 		plot_confusion_matrix(actual_labels, predicted_labels, normalize=True, title='Normalized confusion matrix ('
 																					 'Train)')
 		
-		return (np.mean(minibacth_accuracy), np.mean(minibacth_losses))
+		return (np.mean(minibatch_accuracy), np.mean(minibatch_losses))
 	
 	def trainBatch(self, batch_idx, images, labels):
 		images = Variable(images).cuda()
@@ -102,18 +105,81 @@ class Trainer(object):
 		if batch_idx % 100 == 0:
 			print('Epoch [%d/%d], Batch [%d/%d] Loss: %.4f Accuracy: %0.2f'
 				  % (self.curr_epoch, params['train']['num_epochs'], batch_idx,
-					 math.ceil(len(self.train_loader) / params['train']['batch_size']),
+					 len(self.train_loader),
 					 loss.data[0], accuracy))
 		
 		# clean GPU
 		del images, labels, outputs
 		
+		self.writer.add_scalar('minibatch_loss', np.mean(loss.data[0]), self.batchstep)
+		self.batchstep += 1
+		
 		return accuracy, loss.data[0], pred_labels.data.cpu().numpy()
 	
 	def validate(self):
-		# TODO : Implement Validation
-		pass
+		correct, actual_labels, predicted_labels = ([] for i in range(3))
+		
+		pb = tqdm(total=len(self.valid_loader))
+		
+		for i, (images, labels) in enumerate(self.valid_loader):
+			img = Variable(images, volatile=True).cuda()
+			outputs = self.model(img)
+			_, predicted = torch.max(outputs.data, 1)
+			labels = labels.view(-1, )
+			correct.append(((predicted.cpu() == labels).float().mean()))
+			pb.update(1)
+			
+			actual_labels.extend(labels.numpy())
+			predicted_labels.extend(predicted.cpu().numpy())
+			
+			loss = self.criterion(outputs, Variable(labels).cuda())
+			self.valid_losses.append(loss.data[0])
+			
+			del img
+			
+		pb.close()
+		
+		print('Validation Accuracy : %0.6f' % np.mean(correct))
+		
+		self.valid_accuracy.append(np.mean(correct))
+		
+		# Plot loss and accuracy
+		self.writer.add_scalar('validation_accuracy', np.mean(correct), self.curr_epoch)
+		self.writer.add_scalar('validation_loss', np.mean(self.valid_losses), self.curr_epoch)
+		
+		# Plot confusion matrices
+		plot_confusion_matrix(actual_labels, predicted_labels, title='Confusion matrix, without normalization (Valid)')
+		plot_confusion_matrix(actual_labels, predicted_labels, normalize=True, title='Normalized confusion matrix ('
+																					 'Valid)')
 	
-	def test(self):
+	def test(self, test_loader):
 		# TODO : implement test
-		pass
+		correct, actual_labels, predicted_labels, test_losses = ([] for i in range(4))
+		
+		pb = tqdm(total=len(self.valid_loader))
+		
+		for i, (images, labels) in enumerate(self.valid_loader):
+			img = Variable(images, volatile=True).cuda()
+			outputs = self.model(img)
+			_, predicted = torch.max(outputs.data, 1)
+			labels = labels.view(-1, )
+			correct.append(((predicted.cpu() == labels).float().mean()))
+			pb.update(1)
+			
+			actual_labels.extend(labels.numpy())
+			predicted_labels.extend(predicted.cpu().numpy())
+			
+			loss = self.criterion(outputs, Variable(labels).cuda())
+			test_losses.append(loss.data[0])
+			
+			del img
+		
+		pb.close()
+		
+		print('Test Accuracy : %0.6f' % np.mean(correct))
+		print('Test Losses : %0.6f' % np.mean(test_losses))
+		
+		# Plot confusion matrices
+		plot_confusion_matrix(actual_labels, predicted_labels, title='Confusion matrix, without normalization (Test)')
+		plot_confusion_matrix(actual_labels, predicted_labels, normalize=True, title='Normalized confusion matrix ('
+																					 'Test)')
