@@ -8,16 +8,18 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from paths import paths, file_names
 import os
-import pickle as cPickle
+import pickle
 from paths import paths, file_names
 from modelConfig import params
 from random import shuffle
+import torchvision.transforms as transforms
 
 class HDF5loader():
-	def __init__(self, filename):
+	def __init__(self, filename, trans=None):
 		f = h5py.File(filename, 'r',  libver='latest', swmr=True)
 		self.img_f = f['Image4D']
 		self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['DIAGNOSIS_LABEL']]
+		self.trans = trans
 		
 	def __getitem__(self, index):
 		img = self.img_f[index]
@@ -27,6 +29,13 @@ class HDF5loader():
 		
 		#for coronal view
 		img = np.moveaxis(img, 1, 3)
+		
+		# TODO : drop 10 slices on either side since they are mostly black
+		#img = img[10:-10]
+		
+		# transform  images
+		if self.trans is not None:
+			img = self.trans(img)
 		
 		#normalizing image - Gaussian normalization per volume
 		if np.std(img) != 0:  # to account for black images
@@ -44,26 +53,47 @@ class HDF5loader():
 		return self.img_f.shape[0]
 	
 def dataLoader(hdf5_file):
-	data = HDF5loader(hdf5_file)
-	num_workers = 8
 	
-	train_indices = cPickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+	# random transformations
+
+	transformations = transforms.Compose([
+		transforms.RandomAffine(degrees=10,
+								translate=None,
+								scale=None,
+								shear=10,
+								resample=False,
+								fillcolor=0),
+		transforms.RandomRotation(degrees=10,
+								  resample=False,
+								  expand=False,
+								  center=None)
+	])
+	
+	
+	data = HDF5loader(hdf5_file, transforms=transformations)
+	num_workers = 1
+	pin_memory = False
+	
+	train_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
 												   file_names['data']['Train_set_indices']), 'r'))
 	shuffle(train_indices)
 	
-	valid_indices = cPickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+	valid_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
 												   file_names['data']['Valid_set_indices']), 'r'))
 	
-	test_indices = cPickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+	test_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
 												   file_names['data']['Test_set_indices']), 'r'))
 	
 	train_sampler = SubsetRandomSampler(train_indices)
 	valid_sampler = SubsetRandomSampler(valid_indices)
 	test_sampler = SubsetRandomSampler(test_indices)
 	
-	train_loader = DataLoader(data, batch_size=params['train']['batch_size'], sampler=train_sampler, num_workers=num_workers)
-	valid_loader = DataLoader(data, batch_size=params['train']['batch_size'], sampler=valid_sampler, num_workers=num_workers)
-	test_loader = DataLoader(data, batch_size=params['train']['batch_size'], sampler=test_sampler, num_workers=num_workers)
+	train_loader = DataLoader(data, batch_size=params['train']['batch_size'], sampler=train_sampler,
+							  num_workers=num_workers, pin_memory=pin_memory)
+	valid_loader = DataLoader(data, batch_size=params['train']['batch_size'], sampler=valid_sampler,
+							  num_workers=num_workers, pin_memory=pin_memory)
+	test_loader = DataLoader(data, batch_size=params['train']['batch_size'], sampler=test_sampler,
+							 num_workers=num_workers, pin_memory=pin_memory)
 	
 	return (train_loader, valid_loader, test_loader)
 
