@@ -6,7 +6,7 @@ from train import Trainer
 import time
 
 def main():
-	# create the experiments dirs
+	# create the experiment dirs
 	timestr = time.strftime("%Y%m%d-%H%M%S")
 	base_folder = paths['output']['base_folder']
 	expt_folder = base_folder + timestr
@@ -15,17 +15,17 @@ def main():
 		
 	print('Run : {}\n'.format(timestr))
 
-	# create an instance of the model you want
+	# create an instance of the model\
 	model = CnnVanilla()
 
-	# create your data generator
+	# create data generator
 	datafile = os.path.join(paths['data']['hdf5_path'], file_names['data']['hdf5_file'])
 	train_loader, valid_loader, test_loader = dataLoader(datafile)
 
 	# create trainer and pass all required components to it
 	trainer = Trainer(model, train_loader, valid_loader, expt_folder)
 
-	# train your model
+	# train model
 	trainer.train()
 	
 	# test model
