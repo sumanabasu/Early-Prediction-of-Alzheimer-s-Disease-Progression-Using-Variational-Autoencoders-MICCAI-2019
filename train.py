@@ -18,8 +18,8 @@ class Trainer(object):
 		if torch.cuda.is_available():
 			self.model = model.cuda()
 			
-		self.train_loader = valid_loader #train_loader #  TODO : fix train_loader
-		self.valid_loader = valid_loader
+		self.train_loader = valid_loader #train_loader # TODO: change to train_loader
+		self.valid_loader = train_loader #valid_loader # TODO: change to valid_loader
 		self.optimizer = torch.optim.Adam(model.parameters(),
 										  lr=params['train']['learning_rate'])
 		self.criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
@@ -32,12 +32,9 @@ class Trainer(object):
 		self.train_losses, self.valid_losses, self.train_accuracy, self.valid_accuracy = ([] for i in range(4))
 	
 	def train(self):
-		#train_losses = []
-		#train_accuracy = []
 		
 		for _ in range(params['train']['num_epochs']):
-			print('Training...\nEpoch : '+str(_))
-			self.curr_epoch += 1
+			print('Training...\nEpoch : '+str(self.curr_epoch))
 			
 			# Train Model
 			accuracy, loss = self.trainEpoch()
@@ -53,6 +50,8 @@ class Trainer(object):
 			# Save model
 			saveModelandMetrics(self)
 			# TODO : Stop learning if model doesn't improve for 10 epochs --> Save best model
+			
+			self.curr_epoch += 1
 	
 	def trainEpoch(self):
 		pbt = tqdm(total=len(self.train_loader))
@@ -108,15 +107,17 @@ class Trainer(object):
 			print('Epoch [%d/%d], Batch [%d/%d] Loss: %.4f Accuracy: %0.2f'
 				  % (self.curr_epoch, params['train']['num_epochs'], batch_idx,
 					 len(self.train_loader),
-					 loss.data[0], accuracy))
+					 loss.item(), accuracy))
+			
+			print(loss.item, loss.item())
 		
 		# clean GPU
 		del images, labels, outputs
 		
-		self.writer.add_scalar('minibatch_loss', np.mean(loss.data[0]), self.batchstep)
+		self.writer.add_scalar('minibatch_loss', np.mean(loss.item()), self.batchstep)
 		self.batchstep += 1
 		
-		return accuracy, loss.data[0], pred_labels.data.cpu().numpy()
+		return accuracy, loss.item(), pred_labels.data.cpu().numpy()
 	
 	def validate(self):
 		correct, actual_labels, predicted_labels = ([] for i in range(3))
@@ -135,7 +136,7 @@ class Trainer(object):
 			predicted_labels.extend(predicted.cpu().numpy())
 			
 			loss = self.criterion(outputs, Variable(labels).cuda())
-			self.valid_losses.append(loss.data[0])
+			self.valid_losses.append(loss.item())
 			
 			del img
 			
@@ -173,7 +174,7 @@ class Trainer(object):
 			predicted_labels.extend(predicted.cpu().numpy())
 			
 			loss = self.criterion(outputs, Variable(labels).cuda())
-			test_losses.append(loss.data[0])
+			test_losses.append(loss.item())
 			
 			del img
 		
