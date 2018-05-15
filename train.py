@@ -18,8 +18,8 @@ class Trainer(object):
 		if torch.cuda.is_available():
 			self.model = model.cuda()
 			
-		self.train_loader = valid_loader #train_loader # TODO: change to train_loader
-		self.valid_loader = train_loader #valid_loader # TODO: change to valid_loader
+		self.train_loader = train_loader # TODO: change to train_loader
+		self.valid_loader = valid_loader # TODO: change to valid_loader
 		self.optimizer = torch.optim.Adam(model.parameters(),
 										  lr=params['train']['learning_rate'])
 		self.criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
@@ -58,6 +58,8 @@ class Trainer(object):
 		
 		minibatch_losses, minibatch_accuracy, actual_labels, predicted_labels = ([] for i in range(4))
 		
+		# TODO : shuffle dataloader after every epoch
+		
 		for batch_idx, (images, labels) in enumerate(self.train_loader):
 			accuracy, loss, pred_labels = self.trainBatch(batch_idx, images, labels)
 			
@@ -78,9 +80,6 @@ class Trainer(object):
 		# Plot confusion matrices
 		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, title='Confusion matrix, ' \
 																			  'without normalization (Train)')
-		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, normalize=True, \
-																							   title='Normalized confusion matrix ('
-																					 'Train)')
 		
 		return (np.mean(minibatch_accuracy), np.mean(minibatch_losses))
 	
@@ -108,8 +107,6 @@ class Trainer(object):
 				  % (self.curr_epoch, params['train']['num_epochs'], batch_idx,
 					 len(self.train_loader),
 					 loss.item(), accuracy))
-			
-			print(loss.item, loss.item())
 		
 		# clean GPU
 		del images, labels, outputs
@@ -153,9 +150,6 @@ class Trainer(object):
 		# Plot confusion matrices
 		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, title='Confusion matrix, ' \
 																			  'without normalization (Valid)')
-		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, normalize=True, \
-																							   title='Normalized confusion matrix ('
-																					 'Valid)')
 	
 	def test(self, test_loader):
 		correct, actual_labels, predicted_labels, test_losses = ([] for i in range(4))
@@ -186,8 +180,4 @@ class Trainer(object):
 		# Plot confusion matrices
 		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, title='Confusion matrix, ' \
 																			  'without normalization (Test)')
-		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, normalize=True, \
-																							   title='Normalized confusion '
-																						  'matrix ('
-																					 'Test)')
 		
