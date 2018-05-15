@@ -40,20 +40,20 @@ class CnnVanilla(nn.Module):
 		self.dropout = nn.Dropout(params['model']['fcc_drop_prob'])
 		
 		self.relu = nn.ReLU()
-		self.logsoftmax = nn.LogSoftmax()
+		self.logsoftmax = nn.LogSoftmax(dim=0)
 		
 		#self.maxpool3d = nn.MaxPool3d(kernel_size=(3, 1, 1), stride=(3, 1, 1))
 		
 		for m in self.modules():
 			if isinstance(m, nn.Conv3d):
-				nn.init.xavier_uniform(m.weight.data)
-				nn.init.constant(m.bias.data, 0.01)
+				nn.init.xavier_uniform_(m.weight.data)
+				nn.init.constant_(m.bias.data, 0.01)
 			elif isinstance(m, nn.Linear):
-				nn.init.xavier_uniform(m.weight.data)
-				nn.init.constant(m.bias.data, 0.01)
+				nn.init.xavier_uniform_(m.weight.data)
+				nn.init.constant_(m.bias.data, 0.01)
 			elif isinstance(m, nn.BatchNorm3d):
-				nn.init.constant(m.weight.data, 1)
-				nn.init.constant(m.bias.data, 0.01)
+				nn.init.constant_(m.weight.data, 1)
+				nn.init.constant_(m.bias.data, 0.01)
 	
 	def forward(self, x):
 		# reduce depth
