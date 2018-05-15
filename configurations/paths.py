@@ -31,7 +31,7 @@ file_names = {
 		'parameters'							:	'parameters.json',
 		'train_loss'							:	'train_loss.pkl',
 		'valid_loss'							:	'valid_loss.pkl',
-		'train_acc'								:	'train_accuracy.pkl',
-		'valid_acc'								:	'valid_accuracy.pkl'
+		'train_accuracy'						:	'train_accuracy.pkl',
+		'valid_accuracy'						:	'valid_accuracy.pkl'
 	}
 }
