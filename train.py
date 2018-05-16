@@ -18,8 +18,8 @@ class Trainer(object):
 		if torch.cuda.is_available():
 			self.model = model.cuda()
 			
-		self.train_loader = train_loader # TODO: change to train_loader
-		self.valid_loader = valid_loader # TODO: change to valid_loader
+		self.train_loader = train_loader
+		self.valid_loader = valid_loader
 		self.optimizer = torch.optim.Adam(model.parameters(),
 										  lr=params['train']['learning_rate'])
 		self.criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
@@ -61,9 +61,9 @@ class Trainer(object):
 		# TODO : shuffle dataloader after every epoch
 		
 		for batch_idx, (images, labels) in enumerate(self.train_loader):
-			minibatch_losses = 0
-			minibatch_accuracy = 0
+			minibatch_losses, minibatch_accuracy = (0,)*2
 			
+			torch.cuda.empty_cache()
 			accuracy, loss, pred_labels = self.trainBatch(batch_idx, images, labels)
 			
 			minibatch_losses += loss
@@ -123,7 +123,8 @@ class Trainer(object):
 		return accuracy, loss.data[0], pred_labels.data.cpu().numpy()
 	
 	def validate(self):
-		correct, actual_labels, predicted_labels = ([] for i in range(3))
+		correct = 0
+		actual_labels, predicted_labels = ([] for i in range(2))
 		
 		pb = tqdm(total=len(self.valid_loader))
 		
@@ -132,7 +133,7 @@ class Trainer(object):
 			outputs = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
-			correct.append(((predicted.cpu() == labels).float().mean()))
+			correct += ((predicted.cpu() == labels).float().mean())
 			pb.update(1)
 			
 			actual_labels.extend(labels.numpy())
@@ -145,12 +146,14 @@ class Trainer(object):
 			
 		pb.close()
 		
-		print('Validation Accuracy : %0.6f' % np.mean(correct))
+		correct /= len(self.valid_loader)
 		
-		self.valid_accuracy.append(np.mean(correct))
+		print('Validation Accuracy : %0.6f' % correct)
+		
+		self.valid_accuracy.append(correct)
 		
 		# Plot loss and accuracy
-		self.writer.add_scalar('validation_accuracy', np.mean(correct), self.curr_epoch)
+		self.writer.add_scalar('validation_accuracy', correct, self.curr_epoch)
 		self.writer.add_scalar('validation_loss', np.mean(self.valid_losses), self.curr_epoch)
 		
 		# Plot confusion matrices
@@ -158,7 +161,8 @@ class Trainer(object):
 																			  'without normalization (Valid)')
 	
 	def test(self, test_loader):
-		correct, actual_labels, predicted_labels, test_losses = ([] for i in range(4))
+		correct, test_losses = (0,)*2
+		actual_labels, predicted_labels = ([] for i in range(2))
 		
 		pb = tqdm(total=len(self.valid_loader))
 		
@@ -167,21 +171,24 @@ class Trainer(object):
 			outputs = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
-			correct.append(((predicted.cpu() == labels).float().mean()))
+			correct += ((predicted.cpu() == labels).float().mean())
 			pb.update(1)
 			
 			actual_labels.extend(labels.numpy())
 			predicted_labels.extend(predicted.cpu().numpy())
 			
 			loss = self.criterion(outputs, Variable(labels).cuda())
-			test_losses.append(loss.data[0])
+			test_losses += loss.data[0]
 			
 			del img
 		
 		pb.close()
 		
-		print('Test Accuracy : %0.6f' % np.mean(correct))
-		print('Test Losses : %0.6f' % np.mean(test_losses))
+		correct /= len(test_loader)
+		test_losses /= len(test_loader)
+		
+		print('Test Accuracy : %0.6f' % correct)
+		print('Test Losses : %0.6f' % test_losses)
 		
 		# Plot confusion matrices
 		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, title='Confusion matrix, ' \
