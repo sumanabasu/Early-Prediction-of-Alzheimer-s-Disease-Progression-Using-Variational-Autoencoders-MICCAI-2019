@@ -39,7 +39,7 @@ layer_config = {
 		'dilation': 1
 	},
 	'fc1'	:	{
-		'in'	:	128 * 3 * 11 * 10,
+		'in'	:	128 * 13 * 11 * 10,
 		'out'	:	1024
 	},
 	'fc2'	:	{
@@ -58,14 +58,14 @@ layer_config = {
 
 params	=	{
 	'model'	:	{
-	'conv_drop_prob'	: 0.2,
-	'fcc_drop_prob'		: 0.2
+		'conv_drop_prob'	: 0.5,
+		'fcc_drop_prob'		: 0.5
 	},
 	
 	'train'	:	{
-	'learning_rate' 	: 0.0001,
-	'num_epochs' 		: 500,
-	'batch_size' 		: 4,
-	'label_weights' 	: [0.3, 0.75, 1]
+		'learning_rate' 	: 0.0001,
+		'num_epochs' 		: 100,
+		'batch_size' 		: 1,
+		'label_weights' 	: [0.3, 0.75, 1]
 	}
 }

@@ -6,9 +6,47 @@ matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import os
 import itertools
-from paths import paths
 from sklearn.metrics import confusion_matrix
+import nibabel as nib
 import numpy as np
+from scipy.misc import imsave
+
+
+def visualizeSlices(mri, mri_flag, location, file_name):
+	'''
+	accepts MRI file/3D numpy array corresponding to an MRI
+
+	Args :
+		mri_flag = 1 for MRI file
+		mri_flag = 0 for array
+	
+		mri = file name as string if mri_flag =1
+		mri = numpy array if mri_flag = 0
+	
+		file_name = preferred file name to save the visualized slices
+
+	return:
+	saves 2D visualization of MRI slices
+	'''
+	if mri_flag:
+		nib_img = nib.load(mri)
+		img = nib_img.get_data()
+	
+	else:
+		img = mri
+	
+	if img.ndim == 3:
+		img = np.moveaxis(img, 0, 2)
+	elif img.ndim == 4:
+		# img = np.moveaxis(img, 1, 3)
+		img = np.squeeze(img)
+	
+	depth, height, width = img.shape
+	viz = np.hstack((img[d, ::]).reshape(-1, width) for d in range(20, depth - 10, 10))
+	print(viz.shape)
+	imsave(os.path.join(location, file_name) + '.png', viz)
+	
+	
 
 def plot_confusion_matrix(actual_labels,
 						  predicted_labels,

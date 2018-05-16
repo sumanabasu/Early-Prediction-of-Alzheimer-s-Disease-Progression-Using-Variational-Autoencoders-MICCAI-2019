@@ -40,7 +40,7 @@ class CnnVanilla(nn.Module):
 		self.dropout = nn.Dropout(params['model']['fcc_drop_prob'])
 		
 		self.relu = nn.ReLU()
-		self.logsoftmax = nn.LogSoftmax()
+		self.logsoftmax = nn.LogSoftmax(dim=0)
 		
 		#self.maxpool3d = nn.MaxPool3d(kernel_size=(3, 1, 1), stride=(3, 1, 1))
 		

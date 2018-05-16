@@ -15,11 +15,10 @@ from random import shuffle
 import torchvision.transforms as transforms
 
 class HDF5loader():
-	def __init__(self, filename, trans=None):
+	def __init__(self, filename):
 		f = h5py.File(filename, 'r',  libver='latest', swmr=True)
 		self.img_f = f['Image4D']
 		self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['DIAGNOSIS_LABEL']]
-		self.trans = trans
 		
 	def __getitem__(self, index):
 		img = self.img_f[index]
@@ -32,10 +31,6 @@ class HDF5loader():
 		
 		# TODO : drop 10 slices on either side since they are mostly black
 		#img = img[10:-10]
-		
-		# transform  images
-		if self.trans is not None:
-			img = self.trans(img)
 		
 		#normalizing image - Gaussian normalization per volume
 		if np.std(img) != 0:  # to account for black images
@@ -54,24 +49,8 @@ class HDF5loader():
 	
 def dataLoader(hdf5_file):
 	
-	# random transformations
-
-	transformations = transforms.Compose([
-		transforms.RandomAffine(degrees=10,
-								translate=None,
-								scale=None,
-								shear=10,
-								resample=False,
-								fillcolor=0),
-		transforms.RandomRotation(degrees=10,
-								  resample=False,
-								  expand=False,
-								  center=None)
-	])
-	
-	
-	data = HDF5loader(hdf5_file, transforms=transformations)
-	num_workers = 1
+	data = HDF5loader(hdf5_file)
+	num_workers = 4
 	pin_memory = False
 	
 	train_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
