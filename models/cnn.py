@@ -46,14 +46,14 @@ class CnnVanilla(nn.Module):
 		
 		for m in self.modules():
 			if isinstance(m, nn.Conv3d):
-				nn.init.xavier_uniform_(m.weight.data)
-				nn.init.constant_(m.bias.data, 0.01)
+				nn.init.xavier_uniform(m.weight.data)
+				nn.init.constant(m.bias.data, 0.01)
 			elif isinstance(m, nn.Linear):
-				nn.init.xavier_uniform_(m.weight.data)
-				nn.init.constant_(m.bias.data, 0.01)
+				nn.init.xavier_uniform(m.weight.data)
+				nn.init.constant(m.bias.data, 0.01)
 			elif isinstance(m, nn.BatchNorm3d):
-				nn.init.constant_(m.weight.data, 1)
-				nn.init.constant_(m.bias.data, 0.01)
+				nn.init.constant(m.weight.data, 1)
+				nn.init.constant(m.bias.data, 0.01)
 	
 	def forward(self, x):
 		# reduce depth
