@@ -56,15 +56,18 @@ class Trainer(object):
 	def trainEpoch(self):
 		pbt = tqdm(total=len(self.train_loader))
 		
-		minibatch_losses, minibatch_accuracy, actual_labels, predicted_labels = ([] for i in range(4))
+		actual_labels, predicted_labels = ([] for i in range(2))
 		
 		# TODO : shuffle dataloader after every epoch
 		
 		for batch_idx, (images, labels) in enumerate(self.train_loader):
+			minibatch_losses = 0
+			minibatch_accuracy = 0
+			
 			accuracy, loss, pred_labels = self.trainBatch(batch_idx, images, labels)
 			
-			minibatch_losses.append(loss)
-			minibatch_accuracy.append(accuracy)
+			minibatch_losses += loss
+			minibatch_accuracy += accuracy
 			
 			actual_labels.extend(labels)
 			predicted_labels.extend(pred_labels)
@@ -72,16 +75,19 @@ class Trainer(object):
 			pbt.update(1)
 		
 		pbt.close()
+		
+		minibatch_losses /= len(self.train_loader)
+		minibatch_accuracy /= len(self.train_loader)
 			
 		# Plot losses
-		self.writer.add_scalar('train_loss', np.mean(minibatch_losses), self.curr_epoch)
-		self.writer.add_scalar('train_accuracy', np.mean(minibatch_accuracy), self.curr_epoch)
+		self.writer.add_scalar('train_loss', minibatch_losses , self.curr_epoch)
+		self.writer.add_scalar('train_accuracy', minibatch_accuracy, self.curr_epoch)
 		
 		# Plot confusion matrices
 		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, title='Confusion matrix, ' \
 																			  'without normalization (Train)')
 		
-		return (np.mean(minibatch_accuracy), np.mean(minibatch_losses))
+		return (minibatch_accuracy, minibatch_losses)
 	
 	def trainBatch(self, batch_idx, images, labels):
 		images = Variable(images).cuda()
@@ -106,15 +112,15 @@ class Trainer(object):
 			print('Epoch [%d/%d], Batch [%d/%d] Loss: %.4f Accuracy: %0.2f'
 				  % (self.curr_epoch, params['train']['num_epochs'], batch_idx,
 					 len(self.train_loader),
-					 loss.item(), accuracy))
+					 loss.data[0], accuracy))
 		
 		# clean GPU
 		del images, labels, outputs
 		
-		self.writer.add_scalar('minibatch_loss', np.mean(loss.item()), self.batchstep)
+		self.writer.add_scalar('minibatch_loss', np.mean(loss.data[0]), self.batchstep)
 		self.batchstep += 1
 		
-		return accuracy, loss.item(), pred_labels.data.cpu().numpy()
+		return accuracy, loss.data[0], pred_labels.data.cpu().numpy()
 	
 	def validate(self):
 		correct, actual_labels, predicted_labels = ([] for i in range(3))
@@ -133,7 +139,7 @@ class Trainer(object):
 			predicted_labels.extend(predicted.cpu().numpy())
 			
 			loss = self.criterion(outputs, Variable(labels).cuda())
-			self.valid_losses.append(loss.item())
+			self.valid_losses.append(loss.data[0])
 			
 			del img
 			
@@ -168,7 +174,7 @@ class Trainer(object):
 			predicted_labels.extend(predicted.cpu().numpy())
 			
 			loss = self.criterion(outputs, Variable(labels).cuda())
-			test_losses.append(loss.item())
+			test_losses.append(loss.data[0])
 			
 			del img
 		
