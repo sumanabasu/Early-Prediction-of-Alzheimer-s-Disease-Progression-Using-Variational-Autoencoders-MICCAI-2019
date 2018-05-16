@@ -4,8 +4,10 @@ from dataLoader import dataLoader
 from cnn import CnnVanilla
 from train import Trainer
 import time
+import torch
 
 def main():
+	torch.multiprocessing.set_sharing_strategy('file_system')
 	# create the experiment dirs
 	timestr = time.strftime("%Y%m%d-%H%M%S")
 	base_folder = paths['output']['base_folder']
