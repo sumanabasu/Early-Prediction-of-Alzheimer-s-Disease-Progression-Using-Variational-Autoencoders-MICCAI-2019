@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 from paths import paths, file_names
 
-path = paths['data']['ADNI_study_data_oroginal_labels']
-file_name = file_names['data']['ADNI_study_data_oroginal_labels']
+path = paths['data']['ADNI_study_data_original_labels']
+file_name = file_names['data']['ADNI_study_data_original_labels']
 
 img_loc = paths['data']['Raw_MRI_location']
 all_imgs = glob.glob(img_loc)

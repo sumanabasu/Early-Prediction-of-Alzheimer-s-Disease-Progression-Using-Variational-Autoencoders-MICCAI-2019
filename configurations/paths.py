@@ -8,7 +8,7 @@ paths = {
 	'data' : {
 		'hdf5_path'								:	'/home/NOBACKUP/sbasu11/',
 		'Input_to_Training_Model' 				: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Inputs/',
-		'ADNI_study_data_oroginal_labels'		: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/Data Info/',
+		'ADNI_study_data_original_labels'		: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/Data Info/',
 		'Raw_MRI_location'						: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/ADNI_mnc/*.mnc'
 	},
 	'output'	:	{
