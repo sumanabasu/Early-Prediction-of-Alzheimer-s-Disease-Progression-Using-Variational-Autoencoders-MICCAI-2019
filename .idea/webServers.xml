@@ -2,8 +2,8 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="56901683-f227-4091-860c-30a29c945588" name="/home/ml/sbasu11/Documents/ADNI Project/CNN" url="http://garden-path.cs.mcgill.ca">
-        <fileTransfer host="garden-path.cs.mcgill.ca" port="22" rootFolder="/home/ml/sbasu11" accessType="SFTP">
+      <webServer id="56901683-f227-4091-860c-30a29c945588" name="/home/ml/sbasu11/Documents/ADNI Project/CNN" url="http://agent-9.cs.mcgill.ca">
+        <fileTransfer host="agent-9.cs.mcgill.ca" port="22" privateKey="$USER_HOME$/.ssh/id_rsa" accessType="SFTP" keyPair="true">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" />
           </advancedOptions>
