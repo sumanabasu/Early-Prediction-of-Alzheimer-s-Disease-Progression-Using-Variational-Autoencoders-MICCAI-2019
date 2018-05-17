@@ -5,8 +5,8 @@ import os
 import numpy as np
 import scipy.misc
 import scipy.ndimage as ndi
-from skimage.color import rgb2gray, gray2rgb
-from skimage import img_as_float
+#from skimage.color import rgb2gray, gray2rgb
+#from skimage import img_as_float
 
 
 def transform_matrix_offset_center(matrix, x, y):
