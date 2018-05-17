@@ -4,7 +4,6 @@ from paths import paths, file_names
 import modelConfig
 import torch
 import pickle
-from visualizations import plot_accuracy
 
 def savePickle(location, file, data):
 	pkl_file = open(os.path.join(location, file), 'wb')
