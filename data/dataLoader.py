@@ -12,22 +12,38 @@ import pickle
 from paths import paths, file_names
 from modelConfig import params
 from random import shuffle
+from dataAugmentation import random_transform
 import torchvision.transforms as transforms
 
 class HDF5loader():
-	def __init__(self, filename):
+	def __init__(self, filename, trans=None, train_indices=None):
 		f = h5py.File(filename, 'r',  libver='latest', swmr=True)
 		self.img_f = f['Image4D']
+		self.trans = trans
+		self.train_indices = train_indices
 		self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['DIAGNOSIS_LABEL']]
 		
 	def __getitem__(self, index):
 		img = self.img_f[index]
 		label = self.label[index]
 		
-		#print(index, img.max(), img.min())
+		#print('original', img.shape) #(1, 189, 233, 197)
 		
-		#for coronal view
+		# for coronal view (channels, depth, 0, 1)
 		img = np.moveaxis(img, 1, 3)
+		#print('1. ', img.shape)	#(1, 233, 197, 189)
+		
+		# reshape to (depth, 0, 1, channels) for data augmentation
+		img = np.moveaxis(img, 0, 3)
+		#print('2. ', img.shape)	#(233, 197, 189, 1)
+		
+		# random transformation
+		if self.trans is not None and index in self.train_indices:
+			img = random_transform(img, **self.trans)
+		
+		# reshape back to (channels, depth, 0, 1)
+		img = np.moveaxis(img, 3, 0)
+		#print('3. ', img.shape)	#(1, 233, 197, 189)
 		
 		# TODO : drop 10 slices on either side since they are mostly black
 		#img = img[10:-10]
@@ -47,9 +63,8 @@ class HDF5loader():
 	def __len__(self):
 		return self.img_f.shape[0]
 	
-def dataLoader(hdf5_file):
+def dataLoader(hdf5_file, trans):
 	
-	data = HDF5loader(hdf5_file)
 	num_workers = 4
 	pin_memory = False
 	
@@ -66,6 +81,8 @@ def dataLoader(hdf5_file):
 	train_sampler = SubsetRandomSampler(train_indices)
 	valid_sampler = SubsetRandomSampler(valid_indices)
 	test_sampler = SubsetRandomSampler(test_indices)
+	
+	data = HDF5loader(hdf5_file, trans, train_indices=train_indices)
 	
 	train_loader = DataLoader(data, batch_size=params['train']['batch_size'], sampler=train_sampler,
 							  num_workers=num_workers, pin_memory=pin_memory)
