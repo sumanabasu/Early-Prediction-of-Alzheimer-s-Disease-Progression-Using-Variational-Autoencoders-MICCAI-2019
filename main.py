@@ -5,6 +5,7 @@ from cnn import CnnVanilla
 from train import Trainer
 import time
 import torch
+from modelConfig import data_aug
 
 def main():
 	torch.multiprocessing.set_sharing_strategy('file_system')
@@ -23,16 +24,6 @@ def main():
 	# create data generator
 	datafile = os.path.join(paths['data']['hdf5_path'], file_names['data']['hdf5_file'])
 	
-	# data augmentation
-	data_aug = {
-		'horizontal_flip': 0.5,
-		'vertical_flip': 0.5,
-		'spline_warp': True,
-		'warp_sigma': 0.1,
-		'warp_grid_size': 3,
-		# 'crop_size': (100, 100),
-		'channel_shift_range': 5.
-	}
 	train_loader, valid_loader, test_loader = dataLoader(datafile, trans=data_aug)
 
 	# create trainer and pass all required components to it
