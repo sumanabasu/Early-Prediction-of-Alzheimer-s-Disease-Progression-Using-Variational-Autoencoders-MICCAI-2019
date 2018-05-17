@@ -65,7 +65,7 @@ params	=	{
 	'train'	:	{
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
-		'batch_size' 		: 1,
+		'batch_size' 		: 3,
 		'label_weights' 	: [0.3, 0.75, 1]
 	}
 }
