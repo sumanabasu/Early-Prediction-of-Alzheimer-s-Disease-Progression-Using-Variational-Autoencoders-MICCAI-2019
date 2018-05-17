@@ -13,7 +13,7 @@ def savePickle(location, file, data):
 def saveModelandMetrics(modelObj):
 	# Save Prameters
 	with open(os.path.join(modelObj.expt_folder, file_names['output']['parameters']), 'w') as fp:
-		json.dump([modelConfig.layer_config, modelConfig.params], fp)
+		json.dump([modelConfig.layer_config, modelConfig.params, modelConfig.data_aug], fp)
 	
 	# Save the latest Trained Models
 	torch.save(modelObj.model.state_dict(), os.path.join(modelObj.expt_folder, 'latest_model.pkl'))
