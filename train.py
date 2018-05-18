@@ -7,7 +7,8 @@ from torch.autograd import Variable
 from modelConfig import params
 from tqdm import tqdm
 import numpy as np
-from visualizations import plot_confusion_matrix, plot_accuracy
+from visualizations import plot_confusion_matrix
+from metrics import updateConfusionMatrix
 from tensorboardX import SummaryWriter
 from save import saveModelandMetrics
 
@@ -49,6 +50,7 @@ class Trainer(object):
 			
 			# Save model
 			saveModelandMetrics(self)
+			
 			# TODO : Stop learning if model doesn't improve for 10 epochs --> Save best model
 			
 			self.curr_epoch += 1
@@ -56,21 +58,20 @@ class Trainer(object):
 	def trainEpoch(self):
 		pbt = tqdm(total=len(self.train_loader))
 		
-		actual_labels, predicted_labels = ([] for i in range(2))
+		cm = np.zeros((3, 3), int)
 		
 		# TODO : shuffle dataloader after every epoch
 		
 		for batch_idx, (images, labels) in enumerate(self.train_loader):
-			minibatch_losses, minibatch_accuracy = (0,)*2
+			minibatch_losses = 0
+			minibatch_accuracy = 0
 			
 			torch.cuda.empty_cache()
 			accuracy, loss, pred_labels = self.trainBatch(batch_idx, images, labels)
 			
 			minibatch_losses += loss
 			minibatch_accuracy += accuracy
-			
-			actual_labels.extend(labels)
-			predicted_labels.extend(pred_labels)
+			cm += updateConfusionMatrix(labels, pred_labels)
 			
 			pbt.update(1)
 		
@@ -84,8 +85,8 @@ class Trainer(object):
 		self.writer.add_scalar('train_accuracy', minibatch_accuracy, self.curr_epoch)
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, title='Confusion matrix, ' \
-																			  'without normalization (Train)')
+		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
+																			  '(Train)')
 		
 		return (minibatch_accuracy, minibatch_losses)
 	
@@ -115,7 +116,7 @@ class Trainer(object):
 					 loss.data[0], accuracy))
 		
 		# clean GPU
-		del images, labels, outputs
+		del images, labels, outputs #pred_labels
 		
 		self.writer.add_scalar('minibatch_loss', np.mean(loss.data[0]), self.batchstep)
 		self.batchstep += 1
@@ -124,7 +125,7 @@ class Trainer(object):
 	
 	def validate(self):
 		correct = 0
-		actual_labels, predicted_labels = ([] for i in range(2))
+		cm = np.zeros((3, 3), int)
 		
 		pb = tqdm(total=len(self.valid_loader))
 		
@@ -134,15 +135,14 @@ class Trainer(object):
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
 			correct += ((predicted.cpu() == labels).float().mean())
-			pb.update(1)
 			
-			actual_labels.extend(labels.numpy())
-			predicted_labels.extend(predicted.cpu().numpy())
+			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())
 			
 			loss = self.criterion(outputs, Variable(labels).cuda())
 			self.valid_losses.append(loss.data[0])
 			
 			del img
+			pb.update(1)
 			
 		pb.close()
 		
@@ -157,12 +157,13 @@ class Trainer(object):
 		self.writer.add_scalar('validation_loss', np.mean(self.valid_losses), self.curr_epoch)
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, title='Confusion matrix, ' \
+		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
 																			  'without normalization (Valid)')
 	
 	def test(self, test_loader):
-		correct, test_losses = (0,)*2
-		actual_labels, predicted_labels = ([] for i in range(2))
+		correct =0
+		test_losses = 0
+		cm = np.zeros((3, 3), int)
 		
 		pb = tqdm(total=len(self.valid_loader))
 		
@@ -172,15 +173,14 @@ class Trainer(object):
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
 			correct += ((predicted.cpu() == labels).float().mean())
-			pb.update(1)
 			
-			actual_labels.extend(labels.numpy())
-			predicted_labels.extend(predicted.cpu().numpy())
+			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())
 			
 			loss = self.criterion(outputs, Variable(labels).cuda())
 			test_losses += loss.data[0]
 			
 			del img
+			pb.update(1)
 		
 		pb.close()
 		
@@ -191,6 +191,6 @@ class Trainer(object):
 		print('Test Losses : %0.6f' % test_losses)
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(actual_labels, predicted_labels, location=self.expt_folder, title='Confusion matrix, ' \
+		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
 																			  'without normalization (Test)')
 		

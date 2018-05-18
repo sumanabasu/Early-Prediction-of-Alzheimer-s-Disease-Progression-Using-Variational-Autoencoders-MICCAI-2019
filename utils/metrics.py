@@ -9,7 +9,7 @@ def updateConfusionMatrix(actual_labels, predicted_labels):
 	cnfusion matrix
 	"""
 	n_class = 3
-	cm = np.zeros((n_class, n_class))
+	cm = np.zeros((n_class, n_class), int)
 	
 	for (al, pl) in zip(actual_labels, predicted_labels):
 		#print(al, pl)
