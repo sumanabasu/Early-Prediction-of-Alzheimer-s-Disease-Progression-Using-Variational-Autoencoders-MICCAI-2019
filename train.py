@@ -62,16 +62,17 @@ class Trainer(object):
 		
 		# TODO : shuffle dataloader after every epoch
 		
+		minibatch_losses = 0
+		minibatch_accuracy = 0
+		
 		for batch_idx, (images, labels) in enumerate(self.train_loader):
-			minibatch_losses = 0
-			minibatch_accuracy = 0
 			
 			torch.cuda.empty_cache()
-			accuracy, loss, pred_labels = self.trainBatch(batch_idx, images, labels)
+			accuracy, loss, conf_mat = self.trainBatch(batch_idx, images, labels)
 			
 			minibatch_losses += loss
 			minibatch_accuracy += accuracy
-			cm += updateConfusionMatrix(labels, pred_labels)
+			cm += conf_mat
 			
 			pbt.update(1)
 		
@@ -114,14 +115,15 @@ class Trainer(object):
 				  % (self.curr_epoch, params['train']['num_epochs'], batch_idx,
 					 len(self.train_loader),
 					 loss.data[0], accuracy))
+		cm = updateConfusionMatrix(labels.data.cpu().numpy(), pred_labels.data.cpu().numpy())
 		
 		# clean GPU
-		del images, labels, outputs #pred_labels
+		del images, labels, outputs, _, pred_labels
 		
 		self.writer.add_scalar('minibatch_loss', np.mean(loss.data[0]), self.batchstep)
 		self.batchstep += 1
 		
-		return accuracy, loss.data[0], pred_labels.data.cpu().numpy()
+		return accuracy, loss.data[0], cm
 	
 	def validate(self):
 		correct = 0
