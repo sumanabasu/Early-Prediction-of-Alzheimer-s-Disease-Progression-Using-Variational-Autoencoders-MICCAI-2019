@@ -9,6 +9,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from paths import paths, file_names
+import re
 
 path = paths['data']['ADNI_study_data_original_labels']
 file_name = file_names['data']['ADNI_study_data_original_labels']
@@ -57,7 +58,28 @@ for idx, row in df.iterrows():
 		
 		if diff[np.argmin(diff)] <= 180:
 			print(selected_files[np.argmin(diff)])
-
+			
+			# squeeze baseline labels into 3 classes (NL, MCI, AD) dropping sub-categories of MCI
+			if row['DX_bl'] == 'CN':
+				baseline = 'NL'
+			elif row['DX_bl'] == 'AD':
+				baseline = 'AD'
+			else:
+				baseline = 'MCI'
+				
+			# squeeze into 3 classes (NL, MCI, AD) while keeping track of intermediate changes
+			states = re.split('to ', row['DX'])
+			if len(states) > 1:
+				previous = states[0]
+				current = states[1]
+			else:
+				previous = states[0]
+				current = states[0]
+			
+			if previous == 'Dementia':
+				previous = 'AD'
+			if current == 'Dementia':
+				current = 'AD'
 			
 			df_temp = pd.DataFrame({
 				'FileName' 		: 	selected_files[np.argmin(diff)],
@@ -66,6 +88,9 @@ for idx, row in df.iterrows():
 				'VISCODE'		: 	[row['VISCODE']],
 				'DX_bl'			: 	[row['DX_bl']],
 				'DX'			:	[row['DX']],
+				'baseline'		:	baseline,
+				'previous'		:	previous,
+				'current'		:	current,
 				'EXAMDATE' 		: 	[row['EXAMDATE']],
 				'MMSE_bl'		: 	[row['MMSE_bl']],
 				'MMSE'			: 	[row['MMSE']]
@@ -76,7 +101,8 @@ for idx, row in df.iterrows():
 			files.remove(selected_files[np.argmin(diff)])
 
 # Store data in new csv file
-df_new = df_new[['FileName', 'RID', 'PTID', 'VISCODE', 'DX_bl', 'DX', 'EXAMDATE', 'MMSE_bl', 'MMSE']]
+df_new = df_new[['FileName', 'RID', 'PTID', 'VISCODE', 'DX_bl', 'DX',\
+				 'baseline', 'previous', 'current', 'EXAMDATE', 'MMSE_bl', 'MMSE']]
 
 df_new.to_csv(os.path.join(paths['data']['Input_to_Training_Model'],
 						   file_names['data']['MRI_to_curr_label_mapping']))
