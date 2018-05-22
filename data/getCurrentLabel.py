@@ -28,9 +28,11 @@ for indx in range(len(all_imgs)):
 
 #print(files)
 
-
 file = os.path.join(path, file_name)
 df = pd.read_csv(file, engine='python')
+
+# Discard entries with missing labels and backtracking
+df = df[df['DX'].notnull() & (df['DX'] != 'MCI to NL') & (df['DX'] != 'Dementia to MCI')]
 
 for idx, row in df.iterrows():
 	rid = row['RID']
@@ -75,9 +77,6 @@ for idx, row in df.iterrows():
 
 # Store data in new csv file
 df_new = df_new[['FileName', 'RID', 'PTID', 'VISCODE', 'DX_bl', 'DX', 'EXAMDATE', 'MMSE_bl', 'MMSE']]
-'''
-df_new = df_new[[columns[0], columns[1], columns[2], columns[3], columns[4],
-				 columns[5], columns[6], columns[7], columns[8]]]
-'''
+
 df_new.to_csv(os.path.join(paths['data']['Input_to_Training_Model'],
 						   file_names['data']['MRI_to_curr_label_mapping']))
