@@ -72,11 +72,11 @@ params	=	{
 
 # data augmentation
 data_aug = {
-	#'horizontal_flip': 0.5,
-	#'vertical_flip': 0.5,
-	#'spline_warp': True,
-	#'warp_sigma': 0.1,
-	#'warp_grid_size': 3,
+	'horizontal_flip': 0.5,
+	'vertical_flip': 0.5,
+	'spline_warp': True,
+	'warp_sigma': 0.1,
+	'warp_grid_size': 3,
 	## 'crop_size': (100, 100),
 	#'channel_shift_range': 5.
 }
