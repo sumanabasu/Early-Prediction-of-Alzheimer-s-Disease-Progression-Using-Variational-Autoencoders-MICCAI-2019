@@ -2,7 +2,7 @@
 Convolutional Neural Network
 '''
 import torch.nn as nn
-from  modelConfig import layer_config, params
+from  configurations.modelConfig import layer_config, params
 
 class CnnVanilla(nn.Module):
 	"""Cnn with simple architecture of 6 stacked convolution layers followed by a fully connected layer"""
@@ -21,9 +21,7 @@ class CnnVanilla(nn.Module):
 		self.conv4 = nn.Conv3d(in_channels=layer_config['conv4']['in_channels'], out_channels=layer_config['conv4']['out_channels'],
 							   kernel_size=layer_config['conv4']['kernel_size'], stride=layer_config['conv4']['stride'],
 							   padding=layer_config['conv4']['padding'])
-		self.conv5 = nn.Conv3d(in_channels=layer_config['conv5']['in_channels'], out_channels=layer_config['conv5']['out_channels'],
-							   kernel_size=layer_config['conv5']['kernel_size'], stride=layer_config['conv5']['stride'],
-							   padding=layer_config['conv5']['padding'])
+	
 		
 		self.fc1 = nn.Linear(layer_config['fc1']['in'] , layer_config['fc1']['out'])
 		self.fc2 = nn.Linear(layer_config['fc2']['in'], layer_config['fc2']['out'])
@@ -34,7 +32,6 @@ class CnnVanilla(nn.Module):
 		self.bn2 = nn.BatchNorm3d(layer_config['conv2']['out_channels'])
 		self.bn3 = nn.BatchNorm3d(layer_config['conv3']['out_channels'])
 		self.bn4 = nn.BatchNorm3d(layer_config['conv4']['out_channels'])
-		self.bn5 = nn.BatchNorm3d(layer_config['conv5']['out_channels'])
 		
 		self.dropout3d = nn.Dropout3d(p=params['model']['conv_drop_prob'])
 		self.dropout = nn.Dropout(params['model']['fcc_drop_prob'])
@@ -71,11 +68,8 @@ class CnnVanilla(nn.Module):
 		# print(out64.size())
 		out128 = self.relu(self.bn4(self.conv4(out64)))
 		out128 = self.dropout3d(out128)
-		# print(out128.size())
-		out256 = self.relu(self.bn5(self.conv5(out128)))
-		out256 = self.dropout3d(out256)
-		# print(out256.size())
-		flat = out256.view(out256.size(0), -1)
+		#print(out128.size())
+		flat = out128.view(out128.size(0), -1)
 		# print(flat.size())
 		fcc1 = self.dropout(self.relu(self.fc1(flat)))
 		# print(fcc1.size())
