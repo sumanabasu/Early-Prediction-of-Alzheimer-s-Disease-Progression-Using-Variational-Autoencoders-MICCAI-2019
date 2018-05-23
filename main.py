@@ -1,11 +1,14 @@
 import os
-from paths import paths, file_names
-from dataLoader import dataLoader
-from cnn import CnnVanilla
+
+from configurations.paths import paths, file_names
+from configurations.modelConfig import layer_config, params, data_aug
+
+from data.dataLoader import dataLoader
+
+from models.cnn import CnnVanilla
 from train import Trainer
 import time
 import torch
-from modelConfig import data_aug
 
 def main():
 	torch.multiprocessing.set_sharing_strategy('file_system')

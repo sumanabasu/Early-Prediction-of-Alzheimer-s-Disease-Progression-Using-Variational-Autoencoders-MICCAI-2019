@@ -6,11 +6,10 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
-from paths import paths, file_names
+from configurations.paths import paths, file_names
 import os
 import pickle
-from paths import paths, file_names
-from modelConfig import params
+from configurations.modelConfig import params
 from random import shuffle
 from dataAugmentation import random_transform
 import torchvision.transforms as transforms

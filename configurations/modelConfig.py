@@ -55,7 +55,7 @@ params	=	{
 	},
 	
 	'train'	:	{
-		'learning_rate' 	: 0.0001,
+		'learning_rate' 	: 0.0005,
 		'num_epochs' 		: 100,
 		'batch_size' 		: 4,
 		'label_weights' 	: [0.3, 0.75, 1]
@@ -64,8 +64,8 @@ params	=	{
 
 # data augmentation
 data_aug = {
-	#'horizontal_flip': 0.5,
-	#'vertical_flip': 0.5,
+	'horizontal_flip': 0.5,
+	'vertical_flip': 0.5,
 	#'spline_warp': True,
 	#'warp_sigma': 0.1,
 	#'warp_grid_size': 3,
