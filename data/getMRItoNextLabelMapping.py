@@ -34,7 +34,7 @@ for rid in rids:
 		indices = list(subframe.index)
 		for i, idx in enumerate(indices[:-1]):
 			# pdb.set_trace()
-			subframe.set_value(idx, 'DIAGNOSIS_LABEL', subframe.loc[indices[i + 1]]['DIAGNOSIS_LABEL'])
+			subframe.set_value(idx, 'next', subframe.loc[indices[i + 1]]['current'])
 		
 		subframe = subframe.drop(subframe.index[len(subframe) - 1])
 		
