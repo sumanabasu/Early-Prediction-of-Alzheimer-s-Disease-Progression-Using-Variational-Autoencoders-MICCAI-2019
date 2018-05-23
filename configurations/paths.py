@@ -6,7 +6,8 @@ import time
 		
 paths = {
 	'data' : {
-		'hdf5_path'								:	'/home/NOBACKUP/sbasu11/',
+		'hdf5_path'								:	'/home/ml/sbasu11/Documents/ADNI '
+														'Project/ADNI_newdata/CNN/Inputs/', #'/home/NOBACKUP/sbasu11/',
 		'Input_to_Training_Model' 				: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_newdata/CNN/Inputs/',
 		'ADNI_study_data_original_labels'		:  	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_newdata/Data_Info/',
 		'Raw_MRI_location'						: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_newdata/ADNI_mnc/*.mnc'
