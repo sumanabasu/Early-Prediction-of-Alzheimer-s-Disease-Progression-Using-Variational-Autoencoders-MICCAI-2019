@@ -17,7 +17,7 @@ def getTrainValidTestSplit(label_file,
 						   valid_size=0.2):
 	# Read MRI to next label mapping as dataframe
 	df = pd.read_csv(label_file)
-	rid = rid = cPickle.load(open(rid_file, 'r'))
+	rid = cPickle.load(open(rid_file, 'r'))
 	
 	# Find the set of RID (patients)
 	rid_keys = list(set(df['RID']))
