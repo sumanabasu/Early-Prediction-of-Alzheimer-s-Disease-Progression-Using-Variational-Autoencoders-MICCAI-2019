@@ -24,9 +24,6 @@ class CnnVanilla(nn.Module):
 	
 		
 		self.fc1 = nn.Linear(layer_config['fc1']['in'] , layer_config['fc1']['out'])
-		self.fc2 = nn.Linear(layer_config['fc2']['in'], layer_config['fc2']['out'])
-		self.fc3 = nn.Linear(layer_config['fc3']['in'], layer_config['fc3']['out'])
-		self.fc4 = nn.Linear(layer_config['fc4']['in'], layer_config['fc4']['out'])
 		
 		self.bn1 = nn.BatchNorm3d(layer_config['conv1']['out_channels'])
 		self.bn2 = nn.BatchNorm3d(layer_config['conv2']['out_channels'])
@@ -35,6 +32,14 @@ class CnnVanilla(nn.Module):
 		
 		self.dropout3d = nn.Dropout3d(p=params['model']['conv_drop_prob'])
 		self.dropout = nn.Dropout(params['model']['fcc_drop_prob'])
+		
+		self.mp3dL1 = nn.MaxPool3d(layer_config['maxpool3d']['layer1']['kernel'], layer_config['maxpool3d'][
+			'layer1']['stride'])
+		self.mp3dL2 = nn.MaxPool3d(layer_config['maxpool3d']['layer2']['kernel'], layer_config['maxpool3d'][
+			'layer2']['stride'])
+		self.mp3dL3 = nn.MaxPool3d(layer_config['maxpool3d']['layer3']['kernel'], layer_config['maxpool3d'][
+			'layer3']['stride'])
+		self.adaptiveMp3d = nn.AdaptiveMaxPool3d(layer_config['maxpool3d']['adaptive'])
 		
 		self.relu = nn.ReLU()
 		self.logsoftmax = nn.LogSoftmax(dim=0)
@@ -53,28 +58,20 @@ class CnnVanilla(nn.Module):
 				nn.init.constant(m.bias.data, 0.01)
 	
 	def forward(self, x):
-		# reduce depth
-		#x = self.maxpool3d(x)
 		# print(x.size())
-		# print "inside forward"
-		out16 = self.relu(self.bn1(self.conv1(x)))
+		out16 = self.relu(self.bn1(self.mp3dL1(self.conv1(x))))
 		out16 = self.dropout3d(out16)
 		# print(out16.size())
-		out32 = self.relu(self.bn2(self.conv2(out16)))
+		out32 = self.relu(self.bn2(self.mp3dL2(self.conv2(out16))))
 		out32 = self.dropout3d(out32)
 		# print(out32.size())
-		out64 = self.relu(self.bn3(self.conv3(out32)))
+		out64 = self.relu(self.bn3(self.mp3dL3(self.conv3(out32))))
 		out64 = self.dropout3d(out64)
 		# print(out64.size())
-		out128 = self.relu(self.bn4(self.conv4(out64)))
+		out128 = self.relu(self.bn4(self.adaptiveMp3d(self.conv4(out64))))
 		out128 = self.dropout3d(out128)
-		#print(out128.size())
+		# print(out128.size())
 		flat = out128.view(out128.size(0), -1)
 		# print(flat.size())
-		fcc1 = self.dropout(self.relu(self.fc1(flat)))
-		# print(fcc1.size())
-		fcc2 = self.dropout(self.relu(self.fc2(fcc1)))
-		# print fcc.size()
-		fcc3 = self.dropout(self.relu(self.fc3(fcc2)))
-		fcc4 = self.logsoftmax(self.fc4(fcc3))
-		return fcc4
+		fcc = self.logsoftmax(self.fc1(flat))
+		return fcc
