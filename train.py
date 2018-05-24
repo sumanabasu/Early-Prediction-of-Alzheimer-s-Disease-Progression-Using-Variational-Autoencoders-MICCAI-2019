@@ -60,8 +60,6 @@ class Trainer(object):
 		
 		cm = np.zeros((3, 3), int)
 		
-		# TODO : shuffle dataloader after every epoch
-		
 		minibatch_losses = 0
 		minibatch_accuracy = 0
 		
