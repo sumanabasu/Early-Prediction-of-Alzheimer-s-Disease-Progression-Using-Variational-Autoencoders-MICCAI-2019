@@ -45,7 +45,7 @@ class HDF5loader():
 		#print('3. ', img.shape)	#(1, 233, 197, 189)
 		
 		# TODO : drop 10 slices on either side since they are mostly black
-		#img = img[10:-10]
+		img = img[:,10:-10,::]
 		
 		#normalizing image - Gaussian normalization per volume
 		if np.std(img) != 0:  # to account for black images
