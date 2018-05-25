@@ -1,7 +1,7 @@
 import os
 import json
-from paths import paths, file_names
-import modelConfig
+from configurations.paths import paths, file_names
+from configurations import modelConfig
 import torch
 import pickle
 

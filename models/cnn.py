@@ -2,7 +2,7 @@
 Convolutional Neural Network
 '''
 import torch.nn as nn
-from  modelConfig import layer_config, params
+from  configurations.modelConfig import layer_config, params
 
 class CnnVanilla(nn.Module):
 	"""Cnn with simple architecture of 6 stacked convolution layers followed by a fully connected layer"""

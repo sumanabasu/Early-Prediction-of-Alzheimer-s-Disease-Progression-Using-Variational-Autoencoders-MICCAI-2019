@@ -39,7 +39,7 @@ layer_config = {
 		'dilation': 1
 	},
 	'fc1'	:	{
-		'in'	:	128 * 13 * 11 * 10,
+		'in'	:	128 * 12 * 11 * 10,
 		'out'	:	1024
 	},
 	'fc2'	:	{
@@ -66,17 +66,17 @@ params	=	{
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 200,
 		'batch_size' 		: 3,
-		'label_weights' 	: [0.3, 0.75, 1]
+		'label_weights' 	: [0.63, 0.43, 1]
 	}
 }
 
 # data augmentation
 data_aug = {
-	'horizontal_flip': 0.5,
-	'vertical_flip': 0.5,
-	'spline_warp': True,
-	'warp_sigma': 0.1,
-	'warp_grid_size': 3,
+	#'horizontal_flip': 0.5,
+	#'vertical_flip': 0.5,
+	#'spline_warp': True,
+	#'warp_sigma': 0.1,
+	#'warp_grid_size': 3,
 	## 'crop_size': (100, 100),
 	#'channel_shift_range': 5.
 }
