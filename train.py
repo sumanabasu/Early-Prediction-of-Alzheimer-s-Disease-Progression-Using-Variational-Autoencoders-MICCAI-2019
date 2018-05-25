@@ -4,13 +4,13 @@ train model
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-from modelConfig import params
+from configurations.modelConfig import params
 from tqdm import tqdm
 import numpy as np
-from visualizations import plot_confusion_matrix
-from metrics import updateConfusionMatrix
+from utils.visualizations import plot_confusion_matrix
+from utils.metrics import updateConfusionMatrix
 from tensorboardX import SummaryWriter
-from save import saveModelandMetrics
+from utils.save import saveModelandMetrics
 
 class Trainer(object):
 	def __init__(self, model, train_loader, valid_loader, expt_folder):
