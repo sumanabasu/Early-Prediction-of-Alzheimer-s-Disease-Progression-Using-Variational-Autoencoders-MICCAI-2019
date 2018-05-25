@@ -21,7 +21,7 @@ class HDF5loader():
 		self.img_f = f['Image4D']
 		self.trans = trans
 		self.train_indices = train_indices
-		self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['DIAGNOSIS_LABEL']]
+		self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['current']]
 		
 	def __getitem__(self, index):
 		img = self.img_f[index]
@@ -45,10 +45,14 @@ class HDF5loader():
 		img = np.moveaxis(img, 3, 0)
 		#print('3. ', img.shape)	#(1, 233, 197, 189)
 		
-		# TODO : drop 10 slices on either side since they are mostly black
-		#img = img[10:-10]
+		# drop 10 slices on either side since they are mostly black
+		img = img[:, 10:-10, ::]
 		
-		#normalizing image - Gaussian normalization per volume
+		#get rid of pixels outside (0,200)
+		np.place(img, (img < 0) | (img > 200), 0)
+		#print(img.shape, img.max(), img.min())
+		
+		# normalizing image - Gaussian normalization per volume
 		if np.std(img) != 0:  # to account for black images
 			mean = np.mean(img)
 			std = np.std(img)
