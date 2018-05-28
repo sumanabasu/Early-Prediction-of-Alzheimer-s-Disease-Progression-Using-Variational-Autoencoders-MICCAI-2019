@@ -18,7 +18,7 @@ paths = {
 
 file_names = {
 	'data'	:	{
-		'hdf5_file'								: 	'data.hdf5', #'3DMRItoNextLabel.hdf5',
+		'hdf5_file'								: 	'3DMRItoNextLabel.hdf5',	#'data.hdf5',
 		'ADNI_study_data_oroginal_labels'		:	'DXSUM_PDXCONV_ADNIALL.csv',
 		'MRI_to_next_label_mapping'				:	'3dMRItoNextLabel.csv',
 		'MRI_to_curr_label_mapping'				:	'labels.csv',
