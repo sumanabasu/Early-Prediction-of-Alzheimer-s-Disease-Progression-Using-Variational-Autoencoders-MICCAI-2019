@@ -51,11 +51,15 @@ class HDF5loader():
 		np.place(img, (img < 0) | (img > 200), 0)
 		#print(img.shape, img.max(), img.min())
 		
+		'''
 		# normalizing image - Gaussian normalization per volume
 		if np.std(img) != 0:  # to account for black images
 			mean = np.mean(img)
 			std = np.std(img)
 			img = 1.0 * (img - mean) / std
+		'''
+		img /= 200.
+		#print(img.max(), img.min())
 		
 		img = img.astype(float)
 		img = torch.from_numpy(img).float()

@@ -3,6 +3,7 @@ Convolutional Neural Network
 '''
 import torch.nn as nn
 from  configurations.modelConfig import layer_config, params
+import torch
 
 class CnnVanilla(nn.Module):
 	"""Cnn with simple architecture of 6 stacked convolution layers followed by a fully connected layer"""
@@ -24,7 +25,11 @@ class CnnVanilla(nn.Module):
 		self.conv5 = nn.Conv3d(in_channels=layer_config['conv5']['in_channels'], out_channels=layer_config['conv5']['out_channels'],
 							   kernel_size=layer_config['conv5']['kernel_size'], stride=layer_config['conv5']['stride'],
 							   padding=layer_config['conv5']['padding'])
-		
+		self.conv6 = nn.Conv3d(in_channels=layer_config['conv6']['in_channels'],
+							   out_channels=layer_config['conv6']['out_channels'],
+							   kernel_size=layer_config['conv6']['kernel_size'], stride=layer_config['conv6']['stride'],
+							   padding=layer_config['conv6']['padding'])
+				
 		self.fc1 = nn.Linear(layer_config['fc1']['in'] , layer_config['fc1']['out'])
 		self.fc2 = nn.Linear(layer_config['fc2']['in'], layer_config['fc2']['out'])
 		self.fc3 = nn.Linear(layer_config['fc3']['in'], layer_config['fc3']['out'])
@@ -35,6 +40,7 @@ class CnnVanilla(nn.Module):
 		self.bn3 = nn.BatchNorm3d(layer_config['conv3']['out_channels'])
 		self.bn4 = nn.BatchNorm3d(layer_config['conv4']['out_channels'])
 		self.bn5 = nn.BatchNorm3d(layer_config['conv5']['out_channels'])
+		self.bn6 = nn.BatchNorm3d(layer_config['conv6']['out_channels'])
 		
 		self.dropout3d = nn.Dropout3d(p=params['model']['conv_drop_prob'])
 		self.dropout = nn.Dropout(params['model']['fcc_drop_prob'])
@@ -46,36 +52,60 @@ class CnnVanilla(nn.Module):
 		
 		for m in self.modules():
 			if isinstance(m, nn.Conv3d):
-				nn.init.xavier_uniform(m.weight.data)
+				#nn.init.kaiming_uniform(m.weight.data, mode='fan_in')
+				nn.init.kaiming_normal(m.weight.data, mode='fan_in')
+				#nn.init.xavier_uniform(m.weight.data)
 				nn.init.constant(m.bias.data, 0.01)
 			elif isinstance(m, nn.Linear):
-				nn.init.xavier_uniform(m.weight.data)
+				#nn.init.kaiming_uniform(m.weight.data, mode='fan_in')
+				nn.init.kaiming_normal(m.weight.data, mode='fan_in')
+				#nn.init.xavier_uniform(m.weight.data)
 				nn.init.constant(m.bias.data, 0.01)
 			elif isinstance(m, nn.BatchNorm3d):
 				nn.init.constant(m.weight.data, 1)
 				nn.init.constant(m.bias.data, 0.01)
 	
 	def forward(self, x):
-		# reduce depth
-		#x = self.maxpool3d(x)
+		'''
 		# print(x.size())
 		# print "inside forward"
 		out16 = self.relu(self.bn1(self.conv1(x)))
 		out16 = self.dropout3d(out16)
-		# print(out16.size())
+		# skip connection
+		out16 = self.relu(torch.add(out16, x))
+		#print(out16.size())
+		
 		out32 = self.relu(self.bn2(self.conv2(out16)))
 		out32 = self.dropout3d(out32)
+		# skip connection
+		out32 = self.relu(torch.add(out32, out16))
 		# print(out32.size())
+		
 		out64 = self.relu(self.bn3(self.conv3(out32)))
 		out64 = self.dropout3d(out64)
+		# skip connection
+		out64 = self.relu(torch.add(out64, out32))
 		# print(out64.size())
+		
 		out128 = self.relu(self.bn4(self.conv4(out64)))
 		out128 = self.dropout3d(out128)
-		# print(out128.size())
+		# skip connection
+		out128 = self.relu(torch.add(out128, out64))
+		#print(out128.size())
+		
 		out256 = self.relu(self.bn5(self.conv5(out128)))
 		out256 = self.dropout3d(out256)
-		# print(out256.size())
-		flat = out256.view(out256.size(0), -1)
+		# skip connection
+		out256 = self.relu(torch.add(out256, out128))
+		#print(out256.size())
+		
+		out512 = self.relu(self.bn6(self.conv6(out256)))
+		out512 = self.dropout3d(out512)
+		# skip connection
+		out512 = self.relu(torch.add(out512, out256))
+		#print(out512.size())
+		
+		flat = out512.view(out512.size(0), -1)
 		# print(flat.size())
 		fcc1 = self.dropout(self.relu(self.fc1(flat)))
 		# print(fcc1.size())
@@ -84,3 +114,39 @@ class CnnVanilla(nn.Module):
 		fcc3 = self.dropout(self.relu(self.fc3(fcc2)))
 		fcc4 = self.logsoftmax(self.fc4(fcc3))
 		return fcc4
+		'''
+		
+		out16 = self.relu(self.bn1(self.conv1(x)))
+		out16 = self.dropout3d(out16)
+		# print(out16.size())
+		
+		out32 = self.relu(self.bn2(self.conv2(out16)))
+		out32 = self.dropout3d(out32)
+		# print(out32.size())
+		
+		out64 = self.relu(self.bn3(self.conv3(out32)))
+		out64 = self.dropout3d(out64)
+		# print(out64.size())
+		
+		out128 = self.relu(self.bn4(self.conv4(out64)))
+		out128 = self.dropout3d(out128)
+		# print(out128.size())
+		
+		out256 = self.relu(self.bn5(self.conv5(out128)))
+		out256 = self.dropout3d(out256)
+		# print(out256.size())
+		
+		out512 = self.relu(self.bn6(self.conv6(out256)))
+		out512 = self.dropout3d(out512)
+		# print(out512.size())
+		
+		flat = out512.view(out512.size(0), -1)
+		# print(flat.size())
+		fcc1 = self.dropout(self.relu(self.fc1(flat)))
+		# print(fcc1.size())
+		fcc2 = self.dropout(self.relu(self.fc2(fcc1)))
+		# print fcc.size()
+		fcc3 = self.dropout(self.relu(self.fc3(fcc2)))
+		fcc4 = self.logsoftmax(self.fc4(fcc3))
+		return fcc4
+		

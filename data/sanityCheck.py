@@ -34,7 +34,7 @@ def run_tests():
 	all_files = glob.glob(os.path.join(path, paths['data']['Raw_MRI_location']))
 	count = 0
 	for file in all_files:
-		print(re.split(r'[/.]', file)[-2])
+		#print(re.split(r'[/.]', file)[-2])
 		count += checkIntensityRange(file)
 	print('\n Total Images Outside Stat : ', count)
 	print('Total Percentage of Images Outside Stat : ', (count * 1.0/len(all_files)))

@@ -39,7 +39,7 @@ for idx, row in next_labels_df.iterrows():
 	#print idx, row['FileName'], files[selected_idx[0]]
 	img_nib = nibabel.load(files[selected_idx[0]])
 	img = img_nib.get_data()
-
+	
 	hdf5_file["RID"][idx] = row['RID']
 	hdf5_file["FileName"][idx] = row['FileName']
 	hdf5_file["Image4D"][idx] = img[np.newaxis,:,:,:]
