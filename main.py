@@ -3,7 +3,7 @@ import os
 from configurations.paths import paths, file_names
 from configurations.modelConfig import layer_config, params, data_aug
 
-from data.dataLoader import dataLoader
+from data.dataLoader import dataLoader, run_test_
 
 from models.cnn import CnnVanilla
 from train import Trainer
@@ -23,7 +23,10 @@ def main():
 
 	# create an instance of the model\
 	model = CnnVanilla()
-
+	
+	# count model parameters
+	print('Paramater Count :', sum(p.numel() for p in model.parameters()))
+	
 	# create data generator
 	datafile = os.path.join(paths['data']['hdf5_path'], file_names['data']['hdf5_file'])
 	
@@ -37,9 +40,6 @@ def main():
 	
 	# test model
 	trainer.test(test_loader)
-		
+	
 if __name__ == '__main__':
 	main()
-	
-	
-

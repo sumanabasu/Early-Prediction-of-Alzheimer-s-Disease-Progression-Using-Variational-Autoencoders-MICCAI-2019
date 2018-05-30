@@ -4,13 +4,14 @@ train model
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-from configurations.modelConfig import params
+from configurations.modelConfig import params, num_classes
 from tqdm import tqdm
 import numpy as np
 from utils.visualizations import plot_confusion_matrix
 from utils.metrics import updateConfusionMatrix
 from tensorboardX import SummaryWriter
 from utils.save import saveModelandMetrics
+from torch.optim.lr_scheduler import MultiStepLR
 
 class Trainer(object):
 	def __init__(self, model, train_loader, valid_loader, expt_folder):
@@ -33,9 +34,11 @@ class Trainer(object):
 		self.train_losses, self.valid_losses, self.train_accuracy, self.valid_accuracy = ([] for i in range(4))
 	
 	def train(self):
+		scheduler = MultiStepLR(self.optimizer, milestones=[20, 40], gamma=0.1)
 		
 		for _ in range(params['train']['num_epochs']):
 			print('Training...\nEpoch : '+str(self.curr_epoch))
+			scheduler.step()
 			
 			# Train Model
 			accuracy, loss = self.trainEpoch()
@@ -45,7 +48,6 @@ class Trainer(object):
 			
 			# Validate Model
 			print ('Validation...')
-			self.model.eval()
 			self.validate()
 			
 			# Save model
@@ -56,9 +58,11 @@ class Trainer(object):
 			self.curr_epoch += 1
 	
 	def trainEpoch(self):
+		self.model.train(True)
+		
 		pbt = tqdm(total=len(self.train_loader))
 		
-		cm = np.zeros((3, 3), int)
+		cm = np.zeros((num_classes, num_classes), int)
 		
 		minibatch_losses = 0
 		minibatch_accuracy = 0
@@ -124,8 +128,9 @@ class Trainer(object):
 		return accuracy, loss.data[0], cm
 	
 	def validate(self):
+		self.model.eval()
 		correct = 0
-		cm = np.zeros((3, 3), int)
+		cm = np.zeros((num_classes, num_classes), int)
 		
 		pb = tqdm(total=len(self.valid_loader))
 		
@@ -161,9 +166,12 @@ class Trainer(object):
 																			  'without normalization (Valid)')
 	
 	def test(self, test_loader):
+		self.model.eval()
+		print ('Test...')
+		
 		correct =0
 		test_losses = 0
-		cm = np.zeros((3, 3), int)
+		cm = np.zeros((num_classes, num_classes), int)
 		
 		pb = tqdm(total=len(self.valid_loader))
 		

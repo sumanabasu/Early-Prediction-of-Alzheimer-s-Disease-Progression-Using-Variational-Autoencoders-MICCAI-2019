@@ -2,7 +2,7 @@
 Convolutional Neural Network
 '''
 import torch.nn as nn
-from  configurations.modelConfig import layer_config, params
+from  configurations.modelConfig import layer_config, params, num_classes
 
 class CnnVanilla(nn.Module):
 	"""Cnn with simple architecture of 6 stacked convolution layers followed by a fully connected layer"""
@@ -21,14 +21,6 @@ class CnnVanilla(nn.Module):
 		self.conv4 = nn.Conv3d(in_channels=layer_config['conv4']['in_channels'], out_channels=layer_config['conv4']['out_channels'],
 							   kernel_size=layer_config['conv4']['kernel_size'], stride=layer_config['conv4']['stride'],
 							   padding=layer_config['conv4']['padding'])
-		self.conv5 = nn.Conv3d(in_channels=layer_config['conv5']['in_channels'],
-							   out_channels=layer_config['conv5']['out_channels'],
-							   kernel_size=layer_config['conv5']['kernel_size'], stride=layer_config['conv5']['stride'],
-							   padding=layer_config['conv5']['padding'])
-		self.conv6 = nn.Conv3d(in_channels=layer_config['conv6']['in_channels'],
-							   out_channels=layer_config['conv6']['out_channels'],
-							   kernel_size=layer_config['conv6']['kernel_size'], stride=layer_config['conv6']['stride'],
-							   padding=layer_config['conv6']['padding'])
 	
 		
 		self.fc1 = nn.Linear(layer_config['fc1']['in'] , layer_config['fc1']['out'])
@@ -38,18 +30,15 @@ class CnnVanilla(nn.Module):
 		self.bn2 = nn.BatchNorm3d(layer_config['conv2']['out_channels'])
 		self.bn3 = nn.BatchNorm3d(layer_config['conv3']['out_channels'])
 		self.bn4 = nn.BatchNorm3d(layer_config['conv4']['out_channels'])
-		self.bn5 = nn.BatchNorm3d(layer_config['conv5']['out_channels'])
-		self.bn6 = nn.BatchNorm3d(layer_config['conv6']['out_channels'])
 		
 		self.dropout3d = nn.Dropout3d(p=params['model']['conv_drop_prob'])
 		self.dropout = nn.Dropout(params['model']['fcc_drop_prob'])
 		
-		self.k7 = nn.MaxPool3d(layer_config['maxpool3d']['k7']['kernel'], layer_config['maxpool3d'][
-			'k7']['stride'])
-		self.k5 = nn.MaxPool3d(layer_config['maxpool3d']['k5']['kernel'], layer_config['maxpool3d'][
-			'k5']['stride'])
-		self.k3 = nn.MaxPool3d(layer_config['maxpool3d']['k3']['kernel'], layer_config['maxpool3d'][
-			'k3']['stride'])
+		self.maxpool1 = nn.MaxPool3d(layer_config['maxpool3d']['l1']['kernel'], layer_config['maxpool3d'][
+			'l1']['stride'])
+		self.maxpool = nn.MaxPool3d(layer_config['maxpool3d']['ln']['kernel'], layer_config['maxpool3d'][
+			'ln']['stride'])
+		
 		self.adaptiveMp3d = nn.AdaptiveMaxPool3d(layer_config['maxpool3d']['adaptive'])
 		
 		self.relu = nn.ReLU()
@@ -59,13 +48,13 @@ class CnnVanilla(nn.Module):
 				
 		for m in self.modules():
 			if isinstance(m, nn.Conv3d):
-				#nn.init.kaiming_uniform(m.weight.data, mode='fan_in')
-				nn.init.kaiming_normal(m.weight.data, mode='fan_in')
+				nn.init.kaiming_uniform(m.weight.data, mode='fan_in')
+				#nn.init.kaiming_normal(m.weight.data, mode='fan_in')
 				#nn.init.xavier_uniform(m.weight.data)
 				nn.init.constant(m.bias.data, 0.01)
 			elif isinstance(m, nn.Linear):
-				#nn.init.kaiming_uniform(m.weight.data, mode='fan_in')
-				nn.init.kaiming_normal(m.weight.data, mode='fan_in')
+				nn.init.kaiming_uniform(m.weight.data, mode='fan_in')
+				#nn.init.kaiming_normal(m.weight.data, mode='fan_in')
 				#nn.init.xavier_uniform(m.weight.data)
 				nn.init.constant(m.bias.data, 0.01)
 			elif isinstance(m, nn.BatchNorm3d):
@@ -74,31 +63,25 @@ class CnnVanilla(nn.Module):
 	
 	def forward(self, x):
 		# print(x.size())
-		out32 = self.dropout3d(self.k7(self.relu(self.bn1(self.conv1(x)))))
-		#print(out32.size())
+		out1 = self.dropout3d(self.maxpool1(self.relu(self.bn1(self.conv1(x)))))
+		#print(out1.size())
 		
-		out64 = self.dropout3d(self.k5(self.relu(self.bn2(self.conv2(out32)))))
-		#print(out64.size())
+		out2 = self.dropout3d(self.maxpool(self.relu(self.bn2(self.conv2(out1)))))
+		#print(out2.size())
 		
-		out128 = self.dropout3d(self.k5(self.relu(self.bn3(self.conv3(out64)))))
-		#print(out128.size())
+		out3 = self.dropout3d(self.maxpool(self.relu(self.bn3(self.conv3(out2)))))
+		#print(out3.size())
 		
-		out256 = self.dropout3d(self.k3(self.relu(self.bn4(self.conv4(out128)))))
-		# print(out256.size())
+		out4 = self.dropout3d(self.maxpool(self.relu(self.bn4(self.conv4(out3)))))
+		#print(out4.size())
 		
-		
-		out512 = self.dropout3d(self.adaptiveMp3d(self.relu(self.bn5(self.conv5(out256)))))
-		#print(out512.size())
-		'''
-		out1024 = self.dropout3d(self.adaptiveMp3d(self.relu(self.bn6(self.conv6(out512)))))
-		print(out1024.size())
-		'''
-		
-		flat = out512.view(out512.size(0), -1)
+		flat = out4.view(out4.size(0), -1)
 		#print(flat.size())
 		
 		fcc1 = self.dropout(self.relu(self.fc1(flat)))
 		#print(fcc1.size())
 		
-		fcc = self.logsoftmax(self.fc2(fcc1))
-		return fcc
+		output = self.logsoftmax(self.fc2(fcc1))
+		#print(output.size())
+		
+		return output

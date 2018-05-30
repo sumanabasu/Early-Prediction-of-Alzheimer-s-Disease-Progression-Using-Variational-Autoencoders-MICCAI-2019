@@ -95,7 +95,7 @@ def plot_confusion_matrix(actual_labels,
 
 def plot_confusion_matrix(cm,
 						  location,
-						  classes=np.asarray(['NL', 'MCI', 'AD']),
+						  classes=np.asarray(['NL', 'Diseased']), #np.asarray(['NL', 'MCI', 'AD']),
 						  title='Confusion matrix',
 						  cmap=plt.cm.Blues):
 	"""

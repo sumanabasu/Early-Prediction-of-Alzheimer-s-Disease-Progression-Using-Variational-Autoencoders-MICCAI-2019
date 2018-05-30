@@ -8,7 +8,7 @@ import cPickle
 import os
 from paths import paths, file_names
 
-fname = os.path.join(paths['data']['hadf5_path'],
+fname = os.path.join(paths['data']['hdf5_path'],
 					 file_names['data']['hdf5_file'])
 
 pkl_file = open(os.path.join(paths['data']['Input_to_Training_Model'],file_names['data']['RIDtoMRI']), 'w')

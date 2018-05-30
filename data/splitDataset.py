@@ -13,8 +13,8 @@ def getTrainValidTestSplit(label_file,
 						   rid_file,
 						   shuffle,
 						   random_seed,
-						   train_size=0.6,
-						   valid_size=0.2):
+						   train_size=0.8,
+						   valid_size=0.1):
 	# Read MRI to next label mapping as dataframe
 	df = pd.read_csv(label_file)
 	rid = rid = cPickle.load(open(rid_file, 'r'))

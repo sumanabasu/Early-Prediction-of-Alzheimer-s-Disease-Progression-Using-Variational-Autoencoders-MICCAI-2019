@@ -20,7 +20,8 @@ class HDF5loader():
 		self.img_f = f['Image4D']
 		self.trans = trans
 		self.train_indices = train_indices
-		self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['DIAGNOSIS_LABEL']]
+		#self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['CurrLabel']]
+		self.label = [0 if x == 'NL' else 1 for x in f['CurrLabel']]
 		
 	def __getitem__(self, index):
 		img = self.img_f[index]
@@ -32,9 +33,12 @@ class HDF5loader():
 		img = np.moveaxis(img, 1, 3)
 		#print('1. ', img.shape)	#(1, 233, 197, 189)
 		
+		# drop 10 slices on either side since they are mostly black
+		img = img[:, 10:-10, ::]
+		
 		# reshape to (depth, 0, 1, channels) for data augmentation
 		img = np.moveaxis(img, 0, 3)
-		#print('2. ', img.shape)	#(233, 197, 189, 1)
+		#print('2. ', img.shape)	#(213, 197, 189, 1)
 		
 		# random transformation
 		if self.trans is not None and index in self.train_indices:
@@ -42,10 +46,7 @@ class HDF5loader():
 		
 		# reshape back to (channels, depth, 0, 1)
 		img = np.moveaxis(img, 3, 0)
-		#print('3. ', img.shape)	#(1, 233, 197, 189)
-		
-		# TODO : drop 10 slices on either side since they are mostly black
-		img = img[:,10:-10,::]
+		#print('3. ', img.shape)	#(1, 213, 197, 189)
 		
 		#normalizing image - Gaussian normalization per volume
 		if np.std(img) != 0:  # to account for black images
@@ -93,10 +94,11 @@ def dataLoader(hdf5_file, trans):
 	return (train_loader, valid_loader, test_loader)
 
 def run_test_():
+	from configurations.modelConfig import data_aug
 	max_epochs = 10
 	
 	datafile = os.path.join(paths['data']['hdf5_path'], file_names['data']['hdf5_file'])
-	train_loader, valid_loader, test_loader = dataLoader(datafile)
+	train_loader, valid_loader, test_loader = dataLoader(datafile, trans=data_aug)
 	
 	from tqdm import tqdm
 	
