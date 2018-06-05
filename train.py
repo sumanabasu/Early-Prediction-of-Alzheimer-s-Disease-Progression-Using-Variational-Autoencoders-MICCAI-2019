@@ -34,7 +34,7 @@ class Trainer(object):
 		self.train_losses, self.valid_losses, self.train_accuracy, self.valid_accuracy = ([] for i in range(4))
 	
 	def train(self):
-		scheduler = MultiStepLR(self.optimizer, milestones=[20, 40], gamma=0.1)
+		scheduler = MultiStepLR(self.optimizer, milestones=[40, 60], gamma=0.1)	# [20, 40] earlier
 		
 		for _ in range(params['train']['num_epochs']):
 			print('Training...\nEpoch : '+str(self.curr_epoch))
