@@ -6,7 +6,7 @@ import time
 		
 paths = {
 	'data' : {
-		'hdf5_path'								:	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Inputs/',#'/home/NOBACKUP/sbasu11/',
+		'hdf5_path'								:	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Inputs/', #'/home/NOBACKUP/sbasu11/',
 		'Input_to_Training_Model' 				: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Inputs/',
 		'ADNI_study_data_original_labels'		: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/Data Info/',
 		'Raw_MRI_location'						: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/ADNI_mnc/*.mnc'
@@ -18,7 +18,7 @@ paths = {
 
 file_names = {
 	'data'	:	{
-		'hdf5_file'								: 	'data.hdf5',	#'3DMRItoNextLabel.hdf5'
+		'hdf5_file'								: 	'data.hdf5', #'3DMRItoNextLabel.hdf5',
 		'ADNI_study_data_oroginal_labels'		:	'DXSUM_PDXCONV_ADNIALL.csv',
 		'MRI_to_next_label_mapping'				:	'3dMRItoNextLabel.csv',
 		'MRI_to_curr_label_mapping'				:	'labels.csv',
