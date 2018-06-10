@@ -13,6 +13,7 @@ import nibabel as nib
 import numpy as np
 from scipy.misc import imsave
 from save import savePickle
+import torch
 
 def visualizeSlices(mri, mri_flag, location, file_name):
 	'''
@@ -146,3 +147,26 @@ def plot_accuracy(train_acc, test_acc, location, title='Accuracy'):
 	plt.legend()
 	
 	plt.savefig(os.path.join(location, title))
+	
+def visualizeFilters(model_weights):
+	plt.figure(figsize=(10, 10))
+	for idx, filt in enumerate(model_weights['conv1.weight']):
+		print(filt[0,:,:,:])
+		#print(filt[0, :, :])
+		plt.subplot(3, 3, idx + 1)
+		plt.imshow(filt[0, :, :], cmap="gray")
+		plt.axis('off')
+		
+		plt.savefig('filters.png')
+
+
+def run_test():
+	model_weights = torch.load('/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/model.pkl')
+	#model_weights = torch.load('/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/model.pkl',
+	# map_location=lambda storage, loc: storage)
+	#print(model_weights.keys())
+	
+	#print(model_weights['conv1.weight'])
+	visualizeFilters(model_weights)
+	
+#run_test()

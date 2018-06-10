@@ -82,8 +82,8 @@ class CnnVanilla(nn.Module):
 		
 		out4 = self.dropout3d(self.maxpool(self.relu(self.bn4(self.conv4(out3)))))
 		#print(out4.size())
-		
-		#out5 = self.dropout3d(self.maxpool(self.relu(self.bn4(self.conv4(out4)))))
+	
+		#out5 = self.dropout3d(self.maxpool(self.relu(self.bn5(self.conv5(out4)))))
 		#print(out5.size())
 		
 		flat = out4.view(out4.size(0), -1)

@@ -18,20 +18,20 @@ for i in range(3):
 layer_config = {
 	'conv1': {
 		'in_channels': 1,
-		'out_channels': 9,
+		'out_channels':11,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 0
 	},
 	'conv2': {
-		'in_channels': 9,
-		'out_channels': 9,
+		'in_channels':11,
+		'out_channels':11,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 0
 	},
 	'conv3': {
-		'in_channels': 9,
+		'in_channels':11,
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 1,
@@ -77,7 +77,7 @@ params	=	{
 	'train'	:	{
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
-		'batch_size' 		: 6,
+		'batch_size' 		: 4,
 		'label_weights' 	: [1, 1]	#[0.3, 0.75, 1]
 	}
 }
@@ -90,5 +90,5 @@ data_aug = {
 	#'warp_sigma': 0.1,
 	#'warp_grid_size': 3,
 	## 'crop_size': (100, 100),
-	#'channel_shift_range': 5.
+	'channel_shift_range': 5.
 }

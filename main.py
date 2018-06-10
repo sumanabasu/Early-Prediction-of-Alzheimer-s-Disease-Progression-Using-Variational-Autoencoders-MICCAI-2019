@@ -43,3 +43,9 @@ def main():
 	
 if __name__ == '__main__':
 	main()
+	
+'''
+from utils.visualizations import run_test
+
+run_test()
+'''
