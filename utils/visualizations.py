@@ -14,6 +14,7 @@ import numpy as np
 from scipy.misc import imsave
 from save import savePickle
 import torch
+from configurations.modelConfig import name_classes
 
 def visualizeSlices(mri, mri_flag, location, file_name):
 	'''
@@ -96,7 +97,7 @@ def plot_confusion_matrix(actual_labels,
 
 def plot_confusion_matrix(cm,
 						  location,
-						  classes=np.asarray(['NL', 'Diseased']), #np.asarray(['NL', 'MCI', 'AD']),
+						  classes=name_classes, #np.asarray(['NL', 'Diseased']),
 						  title='Confusion matrix',
 						  cmap=plt.cm.Blues):
 	"""

@@ -1,6 +1,9 @@
 import numpy as np
 
-num_classes = 2
+# section for binary or 3-way classification
+num_classes = 3
+name_classes = np.asarray(['NL', 'MCI', 'AD'])
+class_weight = [0.3, 0.75, 1]
 
 
 num_conv = 4
@@ -78,7 +81,7 @@ params	=	{
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
 		'batch_size' 		: 4,
-		'label_weights' 	: [1, 1]	#[0.3, 0.75, 1]
+		'label_weights' 	: class_weight
 	}
 }
 
