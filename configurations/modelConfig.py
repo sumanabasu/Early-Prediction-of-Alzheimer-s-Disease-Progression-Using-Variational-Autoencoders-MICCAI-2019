@@ -21,39 +21,131 @@ for i in range(3):
 layer_config = {
 	'conv1': {
 		'in_channels': 1,
-		'out_channels':11,
+		'out_channels':16,
 		'kernel_size': 3,
 		'stride': 1,
-		'padding': 0
+		'padding': 1
 	},
 	'conv2': {
-		'in_channels':11,
-		'out_channels':11,
+		'in_channels':16,
+		'out_channels':16,
 		'kernel_size': 3,
 		'stride': 1,
-		'padding': 0
+		'padding': 1
 	},
 	'conv3': {
-		'in_channels':11,
-		'out_channels': 11,
+		'in_channels':16,
+		'out_channels': 16,
 		'kernel_size': 3,
 		'stride': 1,
-		'padding': 0
+		'padding': 1
 	},
 	'conv4': {
-		'in_channels': 11,
-		'out_channels': 11,
+		'in_channels': 16,
+		'out_channels': 16,
 		'kernel_size': 3,
 		'stride': 1,
-		'padding': 0
+		'padding': 1
 	},
-	
+	'conv5': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv6': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv7': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv8': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv9': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv10': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv11': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv12': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv13': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv14': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv15': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv16': {
+		'in_channels': 16,
+		'out_channels': 16,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+		
 	'fc1'	:	{
-		'in'	: 	11 * img_shape[0] * img_shape[1] * img_shape[2],
+		'in'	: 	16 * 13 * 12 * 11,	# 1980, #11 * img_shape[0] * img_shape[1] * img_shape[2],
 		'out'	:	4096
 	},
 	'fc2'	:	{
 		'in'	: 	4096,
+		'out'	:	4096
+	},
+	'fc3'	:	{
+		'in'	: 	4096,
+		'out'	:	1000
+	},
+	'final'	:	{
+		'in'	: 	1000,
 		'out'	:	num_classes
 	},
 	
@@ -80,7 +172,7 @@ params	=	{
 	'train'	:	{
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
-		'batch_size' 		: 4,
+		'batch_size' 		: 2,
 		'label_weights' 	: class_weight
 	}
 }
@@ -93,5 +185,5 @@ data_aug = {
 	#'warp_sigma': 0.1,
 	#'warp_grid_size': 3,
 	## 'crop_size': (100, 100),
-	'channel_shift_range': 5.
+	#'channel_shift_range': 5.
 }
