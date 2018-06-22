@@ -21,12 +21,7 @@ class CnnVanilla(nn.Module):
 		self.conv4 = nn.Conv3d(in_channels=layer_config['conv4']['in_channels'], out_channels=layer_config['conv4']['out_channels'],
 							   kernel_size=layer_config['conv4']['kernel_size'], stride=layer_config['conv4']['stride'],
 							   padding=layer_config['conv4']['padding'])
-		'''
-		self.conv5 = nn.Conv3d(in_channels=layer_config['conv5']['in_channels'],
-							   out_channels=layer_config['conv5']['out_channels'],
-							   kernel_size=layer_config['conv5']['kernel_size'], stride=layer_config['conv5']['stride'],
-							   padding=layer_config['conv5']['padding'])
-		'''
+		
 		
 		self.fc1 = nn.Linear(layer_config['fc1']['in'] , layer_config['fc1']['out'])
 		self.fc2 = nn.Linear(layer_config['fc2']['in'], layer_config['fc2']['out'])

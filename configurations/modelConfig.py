@@ -54,11 +54,36 @@ layer_config = {
 		'out': num_classes
 	},
 	
+	'tconv1': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 2,
+		'padding': 0
+	},
+	'tconv2': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 2,
+		'padding': 0
+	},
+	'tconv3': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 2,
+		'padding': 0
+	},
+	'tconv4': {
+		'in_channels': 11,
+		'out_channels': 1,
+		'kernel_size': 3,
+		'stride': 2,
+		'padding': 0
+	},
+	
 	'maxpool3d': {
-		'l1': {  # to preserve temporal information in  the early phase
-			'kernel': (1, 2, 2),
-			'stride': (1, 2, 2)
-		},
 		'ln': {
 			'kernel': 2,
 			'stride': 2

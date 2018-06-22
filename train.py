@@ -25,14 +25,17 @@ class Trainer(object):
 		self.valid_loader = valid_loader
 		self.optimizer = torch.optim.Adam(model.parameters(),
 										  lr=params['train']['learning_rate'])
-		self.criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
+		self.classification_criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
+		self.autoencoder_criterion = nn.MSELoss()
+		
 		self.curr_epoch = 0
 		self.batchstep = 0
 		
 		self.expt_folder = expt_folder
 		self.writer = SummaryWriter(log_dir=expt_folder)
 		
-		self.train_losses, self.valid_losses, self.train_accuracy, self.valid_accuracy = ([] for i in range(4))
+		self.train_losses_class, self.train_losses_reconst, self.valid_losses, self.train_accuracy, self.valid_accuracy\
+			= ([] for i in range(5))
 	
 	def train(self):
 		scheduler = MultiStepLR(self.optimizer, milestones=[20, 40], gamma=0.1)	# [40, 60] earlier
@@ -42,9 +45,10 @@ class Trainer(object):
 			scheduler.step()
 			
 			# Train Model
-			accuracy, loss = self.trainEpoch()
+			accuracy, classification_loss, reconstruction_loss = self.trainEpoch()
 			
-			self.train_losses.append(loss)
+			self.train_losses_class.append(classification_loss)
+			self.train_losses_reconst.append(reconstruction_loss)
 			self.train_accuracy.append(accuracy)
 			
 			# Validate Model
@@ -65,15 +69,17 @@ class Trainer(object):
 		
 		cm = np.zeros((num_classes, num_classes), int)
 		
-		minibatch_losses = 0
+		minibatch_losses_class = 0
+		minibatch_losses_reconst = 0
 		minibatch_accuracy = 0
 		
 		for batch_idx, (images, labels) in enumerate(self.train_loader):
 			
 			torch.cuda.empty_cache()
-			accuracy, loss, conf_mat = self.trainBatch(batch_idx, images, labels)
+			accuracy, class_loss, conf_mat, reconst_loss = self.trainBatch(batch_idx, images, labels)
 			
-			minibatch_losses += loss
+			minibatch_losses_class += class_loss
+			minibatch_losses_reconst += reconst_loss
 			minibatch_accuracy += accuracy
 			cm += conf_mat
 			
@@ -81,11 +87,13 @@ class Trainer(object):
 		
 		pbt.close()
 		
-		minibatch_losses /= len(self.train_loader)
+		minibatch_losses_class /= len(self.train_loader)
+		minibatch_losses_reconst /= len(self.train_loader)
 		minibatch_accuracy /= len(self.train_loader)
-			
+		
 		# Plot losses
-		self.writer.add_scalar('train_loss', minibatch_losses , self.curr_epoch)
+		self.writer.add_scalar('train_classification_loss', minibatch_losses_class , self.curr_epoch)
+		self.writer.add_scalar('train_reconstruction_loss', minibatch_losses_reconst, self.curr_epoch)
 		self.writer.add_scalar('train_accuracy', minibatch_accuracy, self.curr_epoch)
 		
 		# Plot confusion matrices
@@ -98,7 +106,7 @@ class Trainer(object):
 		# plot ROC curve
 		plotROC(cm, location=self.expt_folder, title='ROC Curve(Train)')
 		
-		return (minibatch_accuracy, minibatch_losses)
+		return minibatch_accuracy, minibatch_losses_class, minibatch_losses_reconst
 	
 	def trainBatch(self, batch_idx, images, labels):
 		images = Variable(images).cuda()
@@ -106,33 +114,41 @@ class Trainer(object):
 		labels = labels.view(-1, )
 		
 		# Forward + Backward + Optimize
-		self.optimizer.zero_grad()
-		outputs = self.model(images)
 		
-		loss = self.criterion(outputs, labels)
-		loss.backward()
+		# x_hat is reconstructed image, p_hat is predicted classification probability
+		x_hat, p_hat = self.model(images)
+		classification_loss = self.classification_criterion(p_hat, labels)
+		reconstruction_loss = self.autoencoder_criterion(x_hat, images)
+		
+		self.optimizer.zero_grad()
+		reconstruction_loss.backward()
 		
 		self.optimizer.step()
 		
 		# Compute accuracy
-		_, pred_labels = torch.max(outputs, 1)
+		_, pred_labels = torch.max(p_hat, 1)
 		accuracy = (labels == pred_labels).float().mean()
 		
 		# Print metrics
 		if batch_idx % 100 == 0:
-			print('Epoch [%d/%d], Batch [%d/%d] Loss: %.4f Accuracy: %0.2f'
-				  % (self.curr_epoch, params['train']['num_epochs'], batch_idx,
+			print('Epoch [%d/%d], Batch [%d/%d] Classification Loss: %.4f Accuracy: %0.2f Reconstruction Loss: %.4f'
+				  % (self.curr_epoch, params['train']['num_epochs'],
+					 batch_idx,
 					 len(self.train_loader),
-					 loss.data[0], accuracy))
+					 classification_loss.data[0],
+					 accuracy,
+				  reconstruction_loss.data[0]))
+			
 		cm = updateConfusionMatrix(labels.data.cpu().numpy(), pred_labels.data.cpu().numpy())
 		
 		# clean GPU
-		del images, labels, outputs, _, pred_labels
+		del images, labels, x_hat, p_hat, _, pred_labels
 		
-		self.writer.add_scalar('minibatch_loss', np.mean(loss.data[0]), self.batchstep)
+		self.writer.add_scalar('minibatch_classification_loss', np.mean(classification_loss.data[0]), self.batchstep)
+		self.writer.add_scalar('minibatch_reconstruction_loss', np.mean(reconstruction_loss.data[0]), self.batchstep)
 		self.batchstep += 1
 		
-		return accuracy, loss.data[0], cm
+		return accuracy, classification_loss.data[0], cm, reconstruction_loss.data[0]
 	
 	def validate(self):
 		self.model.eval()
@@ -150,7 +166,7 @@ class Trainer(object):
 			
 			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())
 			
-			loss = self.criterion(outputs, Variable(labels).cuda())
+			loss = self.classification_criterion(outputs, Variable(labels).cuda())
 			self.valid_losses.append(loss.data[0])
 			
 			del img
@@ -197,7 +213,7 @@ class Trainer(object):
 			
 			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())
 			
-			loss = self.criterion(outputs, Variable(labels).cuda())
+			loss = self.classification_criterion(outputs, Variable(labels).cuda())
 			test_losses += loss.data[0]
 			
 			del img
