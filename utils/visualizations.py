@@ -15,6 +15,7 @@ from scipy.misc import imsave
 from save import savePickle
 import torch
 from configurations.modelConfig import name_classes
+from sklearn.metrics import auc
 
 def visualizeSlices(mri, mri_flag, location, file_name):
 	'''
@@ -50,50 +51,6 @@ def visualizeSlices(mri, mri_flag, location, file_name):
 	print(viz.shape)
 	imsave(os.path.join(location, file_name) + '.png', viz)
 	
-	
-'''
-def plot_confusion_matrix(actual_labels,
-						  predicted_labels,
-						  location,
-						  classes = np.asarray(['NL', 'MCI', 'AD']),
-						  normalize=False,
-						  title='Confusion matrix',
-						  cmap=plt.cm.Blues):
-	"""
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    """
-	
-	cm = confusion_matrix(actual_labels, predicted_labels)
-	
-	if normalize:
-		cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-		print("Normalized confusion matrix")
-	else:
-		print('Confusion matrix without normalization')
-	
-	print(cm)
-	
-	plt.clf()
-	plt.imshow(cm, interpolation='nearest', cmap=cmap)
-	plt.title(title)
-	plt.colorbar()
-	tick_marks = np.arange(len(classes))
-	plt.xticks(tick_marks, classes, rotation=45)
-	plt.yticks(tick_marks, classes)
-	
-	fmt = '.2f' if normalize else 'd'
-	thresh = cm.max() / 2.
-	for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-		plt.text(j, i, format(cm[i, j], fmt), horizontalalignment="center", color="white" if cm[i, j] > thresh else
-		"black")
-	
-	plt.tight_layout()
-	plt.ylabel('True label')
-	plt.xlabel('Predicted label')
-	
-	plt.savefig(os.path.join(location, title))
-'''
 
 def plot_confusion_matrix(cm,
 						  location,
@@ -130,6 +87,22 @@ def plot_confusion_matrix(cm,
 	plt.savefig(os.path.join(location, title))
 	savePickle(location, title, cm)
 	savePickle(location, title+'(normalized)', cmn)
+	
+def plotROC(cm, location, title):
+	fpr = cm[0,1] * 1. / np.sum(cm[0,:])
+	tpr = cm[1,1] * 1. /np.sum(cm[1,:])
+	
+	auc_ = auc(fpr, tpr)
+	plt.plot(fpr, tpr, color='b',
+			 label=r'ROC (AUC = %0.2f)' % (auc_),
+			 lw=2, alpha=.8)
+	
+	plt.xlabel('False Positive Rate')
+	plt.ylabel('True Positive Rate')
+	plt.title('Receiver operating characteristic example')
+	#plt.legend(loc="lower right")
+	plt.savefig(os.path.join(location, title))
+
 
 def plot_accuracy(train_acc, test_acc, location, title='Accuracy'):
 	"""

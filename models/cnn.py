@@ -3,7 +3,6 @@ Convolutional Neural Network
 '''
 import torch.nn as nn
 from  configurations.modelConfig import layer_config, params, num_classes
-from utils.spp import spatial_pyramid_pool
 
 class CnnVanilla(nn.Module):
 	"""Cnn with simple architecture of 6 stacked convolution layers followed by a fully connected layer"""
@@ -81,23 +80,17 @@ class CnnVanilla(nn.Module):
 		out3 = self.dropout3d(self.maxpool(self.relu(self.bn3(self.conv3(out2)))))
 		#print(out3.size())
 		
-		out4 = self.dropout3d(self.relu(self.bn4(self.conv4(out3))))
-		print(out4.size())
-		
-		spp = spatial_pyramid_pool(out4,
-								   params['train']['batch_size'],
-								   [int(out4.size(2)), int(out4.size(3)), int(out4.size(4))],
-								   layer_config['spp'])
-		print('spp', spp.size())
+		out4 = self.dropout3d(self.maxpool(self.relu(self.bn4(self.conv4(out3)))))
+		#print(out4.size())
 	
 		#out5 = self.dropout3d(self.maxpool(self.relu(self.bn5(self.conv5(out4)))))
 		#print(out5.size())
 		
-		#flat = out4.view(out4.size(0), -1)
+		flat = out4.view(out4.size(0), -1)
 		#print(flat.size())
 		
-		fcc1 = self.dropout(self.relu(self.fc1(spp)))
-		print(fcc1.size())
+		fcc1 = self.dropout(self.relu(self.fc1(flat)))
+		#print(fcc1.size())
 		
 		# output = self.dropout(self.relu(self.fc2(fcc1)))
 		# print(fcc2.size())

@@ -8,10 +8,11 @@ from configurations.modelConfig import params, num_classes
 from tqdm import tqdm
 import numpy as np
 from utils.visualizations import plot_confusion_matrix
-from utils.metrics import updateConfusionMatrix
+from utils.metrics import updateConfusionMatrix, calculateF1Score
 from tensorboardX import SummaryWriter
 from utils.save import saveModelandMetrics
 from torch.optim.lr_scheduler import MultiStepLR
+from utils.visualizations import plotROC
 
 class Trainer(object):
 	def __init__(self, model, train_loader, valid_loader, expt_folder):
@@ -91,6 +92,12 @@ class Trainer(object):
 		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
 																			  '(Train)')
 		
+		# F1 Score
+		print('F1 Score : ', calculateF1Score(cm))
+		
+		# plot ROC curve
+		plotROC(cm, location=self.expt_folder, title='ROC Curve(Train)')
+		
 		return (minibatch_accuracy, minibatch_losses)
 	
 	def trainBatch(self, batch_idx, images, labels):
@@ -164,6 +171,12 @@ class Trainer(object):
 		# Plot confusion matrices
 		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
 																			  'without normalization (Valid)')
+		
+		# F1 Score
+		print('F1 Score : ', calculateF1Score(cm))
+		
+		# plot ROC curve
+		plotROC(cm, location=self.expt_folder, title='ROC Curve(Valid)')
 	
 	def test(self, test_loader):
 		self.model.eval()
@@ -201,4 +214,10 @@ class Trainer(object):
 		# Plot confusion matrices
 		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
 																			  'without normalization (Test)')
+		
+		# F1 Score
+		print('F1 Score : ', calculateF1Score(cm))
+		
+		# plot ROC curve
+		plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
 		
