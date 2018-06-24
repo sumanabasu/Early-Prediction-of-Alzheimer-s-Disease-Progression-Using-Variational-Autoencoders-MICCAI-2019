@@ -34,8 +34,9 @@ class Trainer(object):
 		self.expt_folder = expt_folder
 		self.writer = SummaryWriter(log_dir=expt_folder)
 		
-		self.train_losses_class, self.train_losses_reconst, self.valid_losses, self.train_accuracy, self.valid_accuracy\
-			= ([] for i in range(5))
+		self.train_losses_class, self.train_losses_reconst, self.valid_losses, self.train_f1_Score, self.valid_f1_Score,\
+		self.train_accuracy, self.valid_accuracy = ([] for i in range(7))
+		
 	
 	def train(self):
 		scheduler = MultiStepLR(self.optimizer, milestones=[20, 40], gamma=0.1)	# [40, 60] earlier
