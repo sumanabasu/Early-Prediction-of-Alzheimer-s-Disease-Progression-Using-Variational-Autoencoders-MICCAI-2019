@@ -18,35 +18,35 @@ for i in range(3):
 layer_config = {
 	'conv1': {
 		'in_channels': 1,
-		'out_channels': 11,
+		'out_channels': 2,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 0
 	},
 	'conv2': {
-		'in_channels': 11,
-		'out_channels': 11,
+		'in_channels': 2,
+		'out_channels': 4,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 0
 	},
 	'conv3': {
-		'in_channels': 11,
-		'out_channels': 11,
+		'in_channels': 4,
+		'out_channels': 8,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 0
 	},
 	'conv4': {
-		'in_channels': 11,
-		'out_channels': 11,
+		'in_channels': 8,
+		'out_channels': 16,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 0
 	},
 	
 	'fc1': {
-		'in': 11 * img_shape[0] * img_shape[1] * img_shape[2],
+		'in': 16 * img_shape[0] * img_shape[1] * img_shape[2],
 		'out': 4096
 	},
 	'fc2': {

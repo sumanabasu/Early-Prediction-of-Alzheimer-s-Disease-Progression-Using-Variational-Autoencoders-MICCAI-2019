@@ -32,7 +32,8 @@ class Trainer(object):
 		self.expt_folder = expt_folder
 		self.writer = SummaryWriter(log_dir=expt_folder)
 		
-		self.train_losses, self.valid_losses, self.train_accuracy, self.valid_accuracy = ([] for i in range(4))
+		self.train_losses, self.train_f1_Score, self.valid_losses, self.valid_f1_Score, self.train_accuracy, \
+		self.valid_accuracy = ([] for i in range(6))
 	
 	def train(self):
 		scheduler = MultiStepLR(self.optimizer, milestones=[20, 40], gamma=0.1)	# [40, 60] earlier
@@ -42,10 +43,11 @@ class Trainer(object):
 			scheduler.step()
 			
 			# Train Model
-			accuracy, loss = self.trainEpoch()
+			accuracy, loss, f1_score = self.trainEpoch()
 			
 			self.train_losses.append(loss)
 			self.train_accuracy.append(accuracy)
+			self.train_f1_Score.append(f1_score)
 			
 			# Validate Model
 			print ('Validation...')
@@ -93,12 +95,14 @@ class Trainer(object):
 																			  '(Train)')
 		
 		# F1 Score
-		print('F1 Score : ', calculateF1Score(cm))
+		f1_score = calculateF1Score(cm)
+		self.writer.add_scalar('train_f1_score', f1_score, self.curr_epoch)
+		print('F1 Score : ', f1_score)
 		
 		# plot ROC curve
-		plotROC(cm, location=self.expt_folder, title='ROC Curve(Train)')
+		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Train)')
 		
-		return (minibatch_accuracy, minibatch_losses)
+		return (minibatch_accuracy, minibatch_losses, f1_score)
 	
 	def trainBatch(self, batch_idx, images, labels):
 		images = Variable(images).cuda()
@@ -173,10 +177,13 @@ class Trainer(object):
 																			  'without normalization (Valid)')
 		
 		# F1 Score
-		print('F1 Score : ', calculateF1Score(cm))
+		f1_score = calculateF1Score(cm)
+		self.writer.add_scalar('valid_f1_score', f1_score, self.curr_epoch)
+		print('F1 Score : ',f1_score)
+		self.valid_f1_Score.append(f1_score)
 		
 		# plot ROC curve
-		plotROC(cm, location=self.expt_folder, title='ROC Curve(Valid)')
+		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Valid)')
 	
 	def test(self, test_loader):
 		self.model.eval()
@@ -219,5 +226,5 @@ class Trainer(object):
 		print('F1 Score : ', calculateF1Score(cm))
 		
 		# plot ROC curve
-		plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
+		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
 		

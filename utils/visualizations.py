@@ -93,9 +93,8 @@ def plotROC(cm, location, title):
 	tpr = cm[1,1] * 1. /np.sum(cm[1,:])
 	
 	auc_ = auc(fpr, tpr)
-	plt.plot(fpr, tpr, color='b',
-			 label=r'ROC (AUC = %0.2f)' % (auc_),
-			 lw=2, alpha=.8)
+	plt.plot(fpr, tpr, color='b', label=r'ROC (AUC = %0.2f)' % (auc_), lw=2, alpha=.8)
+	plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', label='Random', alpha=.8)
 	
 	plt.xlabel('False Positive Rate')
 	plt.ylabel('True Positive Rate')
