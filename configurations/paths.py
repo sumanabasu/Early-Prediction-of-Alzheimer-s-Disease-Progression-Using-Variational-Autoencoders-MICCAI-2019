@@ -32,6 +32,8 @@ file_names = {
 		'train_loss'							:	'train_loss.pkl',
 		'valid_loss'							:	'valid_loss.pkl',
 		'train_accuracy'						:	'train_accuracy.pkl',
-		'valid_accuracy'						:	'valid_accuracy.pkl'
+		'valid_accuracy'						:	'valid_accuracy.pkl',
+		'train_f1_score'						:	'train_f1_score.pkl',
+		'valid_f1_score'						:	'valid_f1_score.pkl'
 	}
 }
