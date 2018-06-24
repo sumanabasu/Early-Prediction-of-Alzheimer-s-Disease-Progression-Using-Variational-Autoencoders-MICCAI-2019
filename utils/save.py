@@ -28,6 +28,6 @@ def saveModelandMetrics(modelObj):
 	savePickle(location=modelObj.expt_folder, file=file_names['output']['train_loss'], data=modelObj.train_losses)
 	savePickle(location=modelObj.expt_folder, file=file_names['output']['valid_loss'], data=modelObj.valid_losses)
 	
-	savePickle(location=modelObj.expt_folder, file=file_names['output']['train_loss'], data=modelObj.train_accuracy)
-	savePickle(location=modelObj.expt_folder, file=file_names['output']['valid_loss'], data=modelObj.valid_accuracy)
+	savePickle(location=modelObj.expt_folder, file=file_names['output']['train_accuracy'], data=modelObj.train_accuracy)
+	savePickle(location=modelObj.expt_folder, file=file_names['output']['valid_accuracy'], data=modelObj.valid_accuracy)
 	
