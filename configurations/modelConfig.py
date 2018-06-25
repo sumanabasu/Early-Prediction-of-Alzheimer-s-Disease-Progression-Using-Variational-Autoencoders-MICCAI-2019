@@ -21,28 +21,28 @@ layer_config = {
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 1,
-		'padding': 0
+		'padding': 1
 	},
 	'conv2': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 1,
-		'padding': 0
+		'padding': 1
 	},
 	'conv3': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 1,
-		'padding': 0
+		'padding': 1
 	},
 	'conv4': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 1,
-		'padding': 0
+		'padding': 1
 	},
 	
 	'fc1': {
@@ -59,28 +59,28 @@ layer_config = {
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 0
+		'padding': 1
 	},
 	'tconv2': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 0
+		'padding': 1
 	},
 	'tconv3': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 0
+		'padding': 1
 	},
 	'tconv4': {
 		'in_channels': 11,
 		'out_channels': 1,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 0
+		'padding': 1
 	},
 	
 	'maxpool3d': {

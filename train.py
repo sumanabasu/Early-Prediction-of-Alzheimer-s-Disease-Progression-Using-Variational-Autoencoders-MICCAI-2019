@@ -46,11 +46,12 @@ class Trainer(object):
 			scheduler.step()
 			
 			# Train Model
-			accuracy, classification_loss, reconstruction_loss = self.trainEpoch()
+			accuracy, classification_loss, reconstruction_loss, f1_score = self.trainEpoch()
 			
 			self.train_losses_class.append(classification_loss)
 			self.train_losses_reconst.append(reconstruction_loss)
 			self.train_accuracy.append(accuracy)
+			self.train_f1_Score.append(f1_score)
 			
 			# Validate Model
 			print ('Validation...')
@@ -102,12 +103,14 @@ class Trainer(object):
 																			  '(Train)')
 		
 		# F1 Score
-		print('F1 Score : ', calculateF1Score(cm))
+		f1_score = calculateF1Score(cm)
+		self.writer.add_scalar('train_f1_score', f1_score, self.curr_epoch)
+		print('F1 Score : ', f1_score)
 		
 		# plot ROC curve
-		plotROC(cm, location=self.expt_folder, title='ROC Curve(Train)')
+		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Train)')
 		
-		return minibatch_accuracy, minibatch_losses_class, minibatch_losses_reconst
+		return minibatch_accuracy, minibatch_losses_class, minibatch_losses_reconst, f1_score
 	
 	def trainBatch(self, batch_idx, images, labels):
 		images = Variable(images).cuda()
@@ -190,10 +193,13 @@ class Trainer(object):
 																			  'without normalization (Valid)')
 		
 		# F1 Score
+		f1_score = calculateF1Score(cm)
+		self.writer.add_scalar('valid_f1_score', f1_score, self.curr_epoch)
 		print('F1 Score : ', calculateF1Score(cm))
+		self.valid_f1_Score.append(f1_score)
 		
 		# plot ROC curve
-		plotROC(cm, location=self.expt_folder, title='ROC Curve(Valid)')
+		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Valid)')
 	
 	def test(self, test_loader):
 		self.model.eval()
@@ -236,5 +242,5 @@ class Trainer(object):
 		print('F1 Score : ', calculateF1Score(cm))
 		
 		# plot ROC curve
-		plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
+		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
 		

@@ -56,13 +56,17 @@ class AutoEncoder(nn.Module):
 		self.bn2 = nn.BatchNorm3d(layer_config['conv2']['out_channels'])
 		self.bn3 = nn.BatchNorm3d(layer_config['conv3']['out_channels'])
 		self.bn4 = nn.BatchNorm3d(layer_config['conv4']['out_channels'])
-		# self.bn5 = nn.BatchNorm3d(layer_config['conv5']['out_channels'])
+		
+		self.tbn1 = nn.BatchNorm3d(layer_config['tconv1']['out_channels'])
+		self.tbn2 = nn.BatchNorm3d(layer_config['tconv2']['out_channels'])
+		self.tbn3 = nn.BatchNorm3d(layer_config['tconv3']['out_channels'])
+		self.tbn4 = nn.BatchNorm3d(layer_config['tconv4']['out_channels'])
 		
 		self.dropout3d = nn.Dropout3d(p=params['model']['conv_drop_prob'])
 		self.dropout = nn.Dropout(params['model']['fcc_drop_prob'])
 		
 		self.maxpool = nn.MaxPool3d(layer_config['maxpool3d']['ln']['kernel'], layer_config['maxpool3d'][
-			'ln']['stride'])
+			'ln']['stride'], padding=1)
 		
 		self.relu = nn.ReLU()
 		self.logsoftmax = nn.LogSoftmax(dim=0)
@@ -89,36 +93,38 @@ class AutoEncoder(nn.Module):
 				nn.init.constant(m.bias.data, 0.01)
 	
 	def encoder(self, x):
-		# print(x.size())
+		print('encoder : ', x.size())
 		
 		x = self.dropout3d(self.maxpool(self.relu(self.bn1(self.conv1(x)))))
-		# print(x.size())
+		print(x.size())
 		
 		x = self.dropout3d(self.maxpool(self.relu(self.bn2(self.conv2(x)))))
-		# print(out2.size())
+		print(x.size())
 		
 		x = self.dropout3d(self.maxpool(self.relu(self.bn3(self.conv3(x)))))
-		# print(x.size())
+		print(x.size())
 		
 		x = self.dropout3d(self.maxpool(self.relu(self.bn4(self.conv4(x)))))
-		#print(x.size())
+		print(x.size())
 		
 		return x
 	
 	def decoder(self, x):
-		x = self.dropout3d(self.relu(self.tconv1(x)))
+		print('decoder : ', x.size())
+		
+		x = self.dropout3d(self.relu(self.tbn1(self.tconv1(x))))
 		print(x.size())
 		
-		x = self.dropout3d(self.relu(self.tconv2(x)))
+		x = self.dropout3d(self.relu(self.tbn2(self.tconv2(x))))
 		print(x.size())
 		
-		x = self.dropout3d(self.relu(self.tconv3(x)))
+		x = self.dropout3d(self.relu(self.tbn3(self.tconv3(x))))
 		print(x.size())
 		
-		x = self.dropout3d(self.relu(self.tconv4(x)))
+		x = self.dropout3d(self.relu(self.tbn4(self.tconv4(x))))
 		print(x.size())
 		
-	def classification(self, x):
+	def classifier(self, x):
 		x = x.view(x.size(0), -1)
 		# print(x.size())
 		
@@ -139,6 +145,6 @@ class AutoEncoder(nn.Module):
 		x_hat = self.decoder(enc_x)
 		
 		# classifier
-		class_prob = self.classification(enc_x)
+		class_prob = self.classifier(enc_x)
 		
 		return x_hat, class_prob

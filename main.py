@@ -5,7 +5,7 @@ from configurations.modelConfig import layer_config, params, data_aug
 
 from data.dataLoader import dataLoader, run_test_
 
-from models.cnn import CnnVanilla
+from models.autoencoder import AutoEncoder
 from train import Trainer
 import time
 import torch
@@ -22,7 +22,7 @@ def main():
 	print('Run : {}\n'.format(timestr))
 
 	# create an instance of the model\
-	model = CnnVanilla()
+	model = AutoEncoder()
 	
 	# count model parameters
 	print('Paramater Count :', sum(p.numel() for p in model.parameters()))
