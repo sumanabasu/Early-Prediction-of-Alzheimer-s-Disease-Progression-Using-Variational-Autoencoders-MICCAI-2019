@@ -126,6 +126,7 @@ class Trainer(object):
 		
 		self.optimizer.zero_grad()
 		reconstruction_loss.backward()
+		classification_loss.backward()
 		
 		self.optimizer.step()
 		
