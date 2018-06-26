@@ -31,22 +31,26 @@ class AutoEncoder(nn.Module):
 								out_channels=layer_config['tconv1']['out_channels'],
 								kernel_size=layer_config['tconv1']['kernel_size'],
 								stride=layer_config['tconv1']['stride'],
-								padding=layer_config['tconv1']['padding'])
+								padding=layer_config['tconv1']['padding'],
+								output_padding = layer_config['tconv1']['output_padding'])
 		self.tconv2 = nn.ConvTranspose3d(in_channels=layer_config['tconv2']['in_channels'],
 								out_channels=layer_config['tconv2']['out_channels'],
 								kernel_size=layer_config['tconv2']['kernel_size'],
 								stride=layer_config['tconv2']['stride'],
-								padding=layer_config['tconv2']['padding'])
+								padding=layer_config['tconv2']['padding'],
+								output_padding=layer_config['tconv2']['output_padding'])
 		self.tconv3 = nn.ConvTranspose3d(in_channels=layer_config['tconv3']['in_channels'],
 								out_channels=layer_config['tconv3']['out_channels'],
 								kernel_size=layer_config['tconv3']['kernel_size'],
 								stride=layer_config['tconv3']['stride'],
-								padding=layer_config['tconv3']['padding'])
+								padding=layer_config['tconv3']['padding'],
+								output_padding=layer_config['tconv3']['output_padding'])
 		self.tconv4 = nn.ConvTranspose3d(in_channels=layer_config['tconv4']['in_channels'],
 								out_channels=layer_config['tconv4']['out_channels'],
 								kernel_size=layer_config['tconv4']['kernel_size'],
 								stride=layer_config['tconv4']['stride'],
-								padding=layer_config['tconv4']['padding'])
+								padding=layer_config['tconv4']['padding'],
+								output_padding=layer_config['tconv4']['output_padding'])
 		
 		self.fc1 = nn.Linear(layer_config['fc1']['in'], layer_config['fc1']['out'])
 		self.fc2 = nn.Linear(layer_config['fc2']['in'], layer_config['fc2']['out'])
@@ -93,36 +97,38 @@ class AutoEncoder(nn.Module):
 				nn.init.constant(m.bias.data, 0.01)
 	
 	def encoder(self, x):
-		print('encoder : ', x.size())
+		#print('encoder : ', x.size())
 		
-		x = self.dropout3d(self.maxpool(self.relu(self.bn1(self.conv1(x)))))
-		print(x.size())
+		x = self.dropout3d(self.relu(self.bn1(self.conv1(x))))
+		#print(x.size())
 		
-		x = self.dropout3d(self.maxpool(self.relu(self.bn2(self.conv2(x)))))
-		print(x.size())
+		x = self.dropout3d(self.relu(self.bn2(self.conv2(x))))
+		#print(x.size())
 		
-		x = self.dropout3d(self.maxpool(self.relu(self.bn3(self.conv3(x)))))
-		print(x.size())
+		x = self.dropout3d(self.relu(self.bn3(self.conv3(x))))
+		#print(x.size())
 		
-		x = self.dropout3d(self.maxpool(self.relu(self.bn4(self.conv4(x)))))
-		print(x.size())
+		x = self.dropout3d(self.relu(self.bn4(self.conv4(x))))
+		#print(x.size())
 		
 		return x
 	
 	def decoder(self, x):
-		print('decoder : ', x.size())
+		#print('decoder : ', x.size())
 		
 		x = self.dropout3d(self.relu(self.tbn1(self.tconv1(x))))
-		print(x.size())
+		#print(x.size())
 		
 		x = self.dropout3d(self.relu(self.tbn2(self.tconv2(x))))
-		print(x.size())
+		#print(x.size())
 		
 		x = self.dropout3d(self.relu(self.tbn3(self.tconv3(x))))
-		print(x.size())
+		#print(x.size())
 		
 		x = self.dropout3d(self.relu(self.tbn4(self.tconv4(x))))
-		print(x.size())
+		#print(x.size())
+		
+		return x
 		
 	def classifier(self, x):
 		x = x.view(x.size(0), -1)

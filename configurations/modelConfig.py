@@ -20,33 +20,33 @@ layer_config = {
 		'in_channels': 1,
 		'out_channels': 11,
 		'kernel_size': 3,
-		'stride': 1,
+		'stride': 2,
 		'padding': 1
 	},
 	'conv2': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
-		'stride': 1,
+		'stride': 2,
 		'padding': 1
 	},
 	'conv3': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
-		'stride': 1,
+		'stride': 2,
 		'padding': 1
 	},
 	'conv4': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
-		'stride': 1,
+		'stride': 2,
 		'padding': 1
 	},
 	
 	'fc1': {
-		'in': 11 * img_shape[0] * img_shape[1] * img_shape[2],
+		'in': 11 * 14 * 13 * 12, #img_shape[0] * img_shape[1] * img_shape[2],
 		'out': 4096
 	},
 	'fc2': {
@@ -59,28 +59,32 @@ layer_config = {
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 1
+		'padding': 1,
+		'output_padding' : (0, 0, 1)
 	},
 	'tconv2': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 1
+		'padding': 1,
+		'output_padding' : 1
 	},
 	'tconv3': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 1
+		'padding': 1,
+		'output_padding' : (0, 0, 0)
 	},
 	'tconv4': {
 		'in_channels': 11,
 		'out_channels': 1,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 1
+		'padding': 1,
+		'output_padding' : (0, 0, 0)
 	},
 	
 	'maxpool3d': {
