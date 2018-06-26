@@ -37,6 +37,8 @@ class Trainer(object):
 		self.train_losses_class, self.train_losses_reconst, self.valid_losses, self.train_f1_Score, self.valid_f1_Score,\
 		self.train_accuracy, self.valid_accuracy = ([] for i in range(7))
 		
+		self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
+		
 	
 	def train(self):
 		scheduler = MultiStepLR(self.optimizer, milestones=[20, 40], gamma=0.1)	# [40, 60] earlier
@@ -124,9 +126,12 @@ class Trainer(object):
 		classification_loss = self.classification_criterion(p_hat, labels)
 		reconstruction_loss = self.autoencoder_criterion(x_hat, images)
 		
+		loss = classification_loss + self.lambda_ * reconstruction_loss
+		
 		self.optimizer.zero_grad()
-		reconstruction_loss.backward()
-		classification_loss.backward()
+		#classification_loss.backward(retain_graph=True)
+		loss.backward()
+		
 		
 		self.optimizer.step()
 		
