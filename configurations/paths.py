@@ -29,7 +29,8 @@ file_names = {
 	},
 	'output'	:	{
 		'parameters'							:	'parameters.json',
-		'train_loss'							:	'train_loss.pkl',
+		'train_loss_classification'				:	'train_loss_classification.pkl',
+		'train_loss_reconstruction'				:	'train_loss_reconstruction.pkl',
 		'valid_loss'							:	'valid_loss.pkl',
 		'train_accuracy'						:	'train_accuracy.pkl',
 		'valid_accuracy'						:	'valid_accuracy.pkl',

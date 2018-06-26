@@ -37,7 +37,7 @@ class Trainer(object):
 		self.train_losses_class, self.train_losses_reconst, self.valid_losses, self.train_f1_Score, self.valid_f1_Score,\
 		self.train_accuracy, self.valid_accuracy = ([] for i in range(7))
 		
-		self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
+		#self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
 		
 	
 	def train(self):
@@ -126,7 +126,7 @@ class Trainer(object):
 		classification_loss = self.classification_criterion(p_hat, labels)
 		reconstruction_loss = self.autoencoder_criterion(x_hat, images)
 		
-		loss = classification_loss + self.lambda_ * reconstruction_loss
+		loss = classification_loss + params['train']['lambda'] * reconstruction_loss
 		
 		self.optimizer.zero_grad()
 		#classification_loss.backward(retain_graph=True)
@@ -169,7 +169,7 @@ class Trainer(object):
 		
 		for i, (images, labels) in enumerate(self.valid_loader):
 			img = Variable(images, volatile=True).cuda()
-			outputs = self.model(img)
+			_, outputs = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
 			correct += ((predicted.cpu() == labels).float().mean())
@@ -219,7 +219,7 @@ class Trainer(object):
 		
 		for i, (images, labels) in enumerate(test_loader):
 			img = Variable(images, volatile=True).cuda()
-			outputs = self.model(img)
+			_, outputs = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
 			correct += ((predicted.cpu() == labels).float().mean())

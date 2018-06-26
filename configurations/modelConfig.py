@@ -107,7 +107,8 @@ params = {
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
 		'batch_size' 		: 4,
-		'label_weights' 	: class_weight
+		'label_weights' 	: class_weight,
+		'lambda'			: 0.1
 	}
 }
 
