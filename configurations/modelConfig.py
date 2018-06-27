@@ -108,7 +108,7 @@ params = {
 		'num_epochs' 		: 100,
 		'batch_size' 		: 4,
 		'label_weights' 	: class_weight,
-		'lambda'			: 0.1
+		'lambda'			: 2.5
 	}
 }
 
