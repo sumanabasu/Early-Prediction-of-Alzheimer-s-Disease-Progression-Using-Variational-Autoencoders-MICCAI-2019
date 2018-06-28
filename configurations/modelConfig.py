@@ -1,8 +1,8 @@
 import numpy as np
 
-num_classes = 2
-name_classes = np.asarray(['NL', 'Diseased'])
-class_weight = [1, 1]
+num_classes = 3
+name_classes = np.asarray(['NL', 'MCI', 'AD'])
+class_weight = [1, 1, 1]
 
 num_conv = 4
 img_shape = np.array([213, 197, 189])
@@ -49,7 +49,11 @@ layer_config = {
 		'in': 16 * img_shape[0] * img_shape[1] * img_shape[2],
 		'out': 4096
 	},
-	'fc2': {
+	'fc21': {
+		'in': 4096,
+		'out': num_classes
+	},
+	'fc22': {
 		'in': 4096,
 		'out': num_classes
 	},

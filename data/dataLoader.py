@@ -20,8 +20,8 @@ class HDF5loader():
 		self.img_f = f['Image4D']
 		self.trans = trans
 		self.train_indices = train_indices
-		#self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['NextLabel']]
-		self.label = [0 if x == 'NL' else 1 for x in f['CurrLabel']] #for current label	#for binary
+		self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['NextLabel']]
+		#self.label = [0 if x == 'NL' else 1 for x in f['CurrLabel']] #for current label	#for binary
 		# classification on current label
 		#self.label = [0 if x == 'NL' else 1 for x in f['NextLabel']]	#for binary classification on next label
 		

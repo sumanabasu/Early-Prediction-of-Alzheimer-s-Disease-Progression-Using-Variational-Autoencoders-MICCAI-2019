@@ -1,7 +1,10 @@
 '''
 Convolutional Neural Network
 '''
+import torch
 import torch.nn as nn
+from torch import FloatTensor
+
 from  configurations.modelConfig import layer_config, params, num_classes
 
 class CnnVanilla(nn.Module):
@@ -29,8 +32,8 @@ class CnnVanilla(nn.Module):
 		'''
 		
 		self.fc1 = nn.Linear(layer_config['fc1']['in'] , layer_config['fc1']['out'])
-		self.fc2 = nn.Linear(layer_config['fc2']['in'], layer_config['fc2']['out'])
-		#self.fc3 = nn.Linear(layer_config['fc3']['in'], layer_config['fc3']['out'])
+		self.fc21 = nn.Linear(layer_config['fc21']['in'], layer_config['fc21']['out'])
+		self.fc22 = nn.Linear(layer_config['fc22']['in'], layer_config['fc22']['out'])
 		
 		self.bn1 = nn.BatchNorm3d(layer_config['conv1']['out_channels'])
 		self.bn2 = nn.BatchNorm3d(layer_config['conv2']['out_channels'])
@@ -49,7 +52,8 @@ class CnnVanilla(nn.Module):
 		self.adaptiveMp3d = nn.AdaptiveMaxPool3d(layer_config['maxpool3d']['adaptive'])
 		
 		self.relu = nn.ReLU()
-		self.logsoftmax = nn.LogSoftmax(dim=0)
+		self.logsoftmax1 = nn.LogSoftmax(dim=0)
+		self.logsoftmax2 = nn.LogSoftmax(dim=0)
 		
 		#self.maxpool3d = nn.MaxPool3d(kernel_size=(3, 1, 1), stride=(3, 1, 1))
 		
@@ -90,12 +94,22 @@ class CnnVanilla(nn.Module):
 		#print(flat.size())
 		
 		fcc1 = self.dropout(self.relu(self.fc1(flat)))
+		fcc21 = self.fc21(fcc1)
+		fcc22 = self.fc22(fcc1)
 		#print(fcc1.size())
 		
 		# output = self.dropout(self.relu(self.fc2(fcc1)))
 		# print(fcc2.size())
 		
-		output = self.logsoftmax(self.fc2(fcc1))
+		log_softmax_nl_dis = self.logsoftmax1(fcc21)
+		log_softmax_mci_ad = self.logsoftmax2(fcc22)
+		
+		
+		output = torch.stack([log_softmax_nl_dis[:, 0], log_softmax_nl_dis[:, 1] + log_softmax_mci_ad[:, 0],
+					   log_softmax_nl_dis[:, 1] +log_softmax_mci_ad[:, 1]])
+		
+		output = output.transpose(0, 1)
+		
 		#print(output.size())
 		
 		return output
