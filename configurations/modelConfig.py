@@ -7,46 +7,43 @@ class_weight = [1, 1]
 num_conv = 4
 img_shape = np.array([213, 197, 189])
 
-for i in range(3):
-	for _ in range(num_conv):
-		if i == 0 and _ == 0:
-			img_shape[0] = img_shape[0] - 2
-		else:
-			img_shape[i] /= 2
-			img_shape[i] -= 1
+for _ in range(num_conv):
+	img_shape = np.ceil(img_shape / 2)
+	
+#img_shape.astype(np.int32)
 
 layer_config = {
 	'conv1': {
 		'in_channels': 1,
 		'out_channels': 11,
 		'kernel_size': 3,
-		'stride': 2,
+		'stride': 1,
 		'padding': 1
 	},
 	'conv2': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
-		'stride': 2,
+		'stride': 1,
 		'padding': 1
 	},
 	'conv3': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
-		'stride': 2,
+		'stride': 1,
 		'padding': 1
 	},
 	'conv4': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
-		'stride': 2,
+		'stride': 1,
 		'padding': 1
 	},
 	
 	'fc1': {
-		'in': 11 * 14 * 13 * 12, #img_shape[0] * img_shape[1] * img_shape[2],
+		'in': 11 * int(np.prod(img_shape[:])), #14 * 13 * 12,
 		'out': 4096
 	},
 	'fc2': {
@@ -59,32 +56,32 @@ layer_config = {
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 1,
-		'output_padding' : (0, 0, 1)
+		'padding': 0
+		#'output_padding' : 1	#(0, 0, 1)
 	},
 	'tconv2': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 1,
-		'output_padding' : 1
+		'padding': 0
+		#'output_padding' : 1
 	},
 	'tconv3': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 1,
-		'output_padding' : (0, 0, 0)
+		'padding': 0
+		#'output_padding' : 1	#(0, 0, 0)
 	},
 	'tconv4': {
 		'in_channels': 11,
 		'out_channels': 1,
 		'kernel_size': 3,
 		'stride': 2,
-		'padding': 1,
-		'output_padding' : (0, 0, 0)
+		'padding': 0
+		#'output_padding' : 1	#(0, 0, 0)
 	},
 	
 	'maxpool3d': {
@@ -108,7 +105,7 @@ params = {
 		'num_epochs' 		: 100,
 		'batch_size' 		: 4,
 		'label_weights' 	: class_weight,
-		'lambda'			: 2.5
+		'lambda'			: 5
 	}
 }
 
