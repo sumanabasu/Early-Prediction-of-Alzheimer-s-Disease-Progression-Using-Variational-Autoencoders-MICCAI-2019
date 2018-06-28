@@ -106,8 +106,7 @@ params = {
 		'batch_size' 		: 4,
 		'label_weights' 	: class_weight,
 		'lambda'			: 2.5,
-		'lr_schedule'		: [15, 25, 35],
-		'classes'			: name_classes
+		'lr_schedule'		: [15, 25, 35]
 	}
 }
 
