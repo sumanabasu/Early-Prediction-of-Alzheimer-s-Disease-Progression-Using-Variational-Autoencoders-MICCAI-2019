@@ -41,32 +41,29 @@ class AutoEncoder(nn.Module):
 							   padding=layer_config['conv4']['padding'])
 		
 		
-		self.tconv1 = nn.ConvTranspose3d(in_channels=layer_config['tconv1']['in_channels'],
+		self.tconv1 = nn.Conv3d(in_channels=layer_config['tconv1']['in_channels'],
 										 out_channels=layer_config['tconv1']['out_channels'],
 										 kernel_size=layer_config['tconv1']['kernel_size'],
 										 stride=layer_config['tconv1']['stride'],
 										 padding=layer_config['tconv1']['padding'])
-		self.tconv2 = nn.ConvTranspose3d(in_channels=layer_config['tconv2']['in_channels'],
+		self.tconv2 = nn.Conv3d(in_channels=layer_config['tconv2']['in_channels'],
 										 out_channels=layer_config['tconv2']['out_channels'],
 										 kernel_size=layer_config['tconv2']['kernel_size'],
 										 stride=layer_config['tconv2']['stride'],
 										 padding=layer_config['tconv2']['padding'])
-		self.tconv3 = nn.ConvTranspose3d(in_channels=layer_config['tconv3']['in_channels'],
+		self.tconv3 = nn.Conv3d(in_channels=layer_config['tconv3']['in_channels'],
 										 out_channels=layer_config['tconv3']['out_channels'],
 										 kernel_size=layer_config['tconv3']['kernel_size'],
 										 stride=layer_config['tconv3']['stride'],
 										 padding=layer_config['tconv3']['padding'])
-		self.tconv4 = nn.ConvTranspose3d(in_channels=layer_config['tconv4']['in_channels'],
+		self.tconv4 = nn.Conv3d(in_channels=layer_config['tconv4']['in_channels'],
 										 out_channels=layer_config['tconv4']['out_channels'],
 										 kernel_size=layer_config['tconv4']['kernel_size'],
 										 stride=layer_config['tconv4']['stride'],
 										 padding=layer_config['tconv4']['padding'])
-		'''
-		self.tconv1 = nn.Upsample(scale_factor=2, mode='nearest')
-		self.tconv2 = nn.Upsample(scale_factor=2, mode='nearest')
-		self.tconv3 = nn.Upsample(scale_factor=2, mode='nearest')
-		self.tconv4 = nn.Upsample(scale_factor=2, mode='nearest')
-		'''
+
+		self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
+	
 		self.fc1 = nn.Linear(layer_config['fc1']['in'], layer_config['fc1']['out'])
 		self.fc2 = nn.Linear(layer_config['fc2']['in'], layer_config['fc2']['out'])
 		# self.fc3 = nn.Linear(layer_config['fc3']['in'], layer_config['fc3']['out'])
@@ -139,22 +136,22 @@ class AutoEncoder(nn.Module):
 	def decoder(self, x):
 		#print('decoder : ', x.size())
 		
-		x = self.dropout3d(self.relu(self.tbn1(self.tconv1(x))))
+		x = self.dropout3d(self.relu(self.tbn1(self.tconv1(self.upsample(x)))))
 		x = crop(x, self.shapes[-1])
 		self.shapes.pop()
 		#print(x.size())
 		
-		x = self.dropout3d(self.relu(self.tbn2(self.tconv2(x))))
+		x = self.dropout3d(self.relu(self.tbn2(self.tconv2(self.upsample(x)))))
 		x = crop(x, self.shapes[-1])
 		self.shapes.pop()
 		#print(x.size())
 		
-		x = self.dropout3d(self.relu(self.tbn3(self.tconv3(x))))
+		x = self.dropout3d(self.relu(self.tbn3(self.tconv3(self.upsample(x)))))
 		x = crop(x, self.shapes[-1])
 		self.shapes.pop()
 		#print(x.size())
 		
-		x = self.dropout3d(self.relu(self.tbn4(self.tconv4(x))))
+		x = self.dropout3d(self.relu(self.tbn4(self.tconv4(self.upsample(x)))))
 		x = crop(x, self.shapes[-1])
 		self.shapes.pop()
 		#print(x.size())

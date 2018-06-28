@@ -55,32 +55,32 @@ layer_config = {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
-		'stride': 2,
-		'padding': 0
+		'stride': 1,
+		'padding': 1
 		#'output_padding' : 1	#(0, 0, 1)
 	},
 	'tconv2': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
-		'stride': 2,
-		'padding': 0
+		'stride': 1,
+		'padding': 1
 		#'output_padding' : 1
 	},
 	'tconv3': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
-		'stride': 2,
-		'padding': 0
+		'stride': 1,
+		'padding': 1
 		#'output_padding' : 1	#(0, 0, 0)
 	},
 	'tconv4': {
 		'in_channels': 11,
 		'out_channels': 1,
 		'kernel_size': 3,
-		'stride': 2,
-		'padding': 0
+		'stride': 1,
+		'padding': 1
 		#'output_padding' : 1	#(0, 0, 0)
 	},
 	
@@ -105,7 +105,9 @@ params = {
 		'num_epochs' 		: 100,
 		'batch_size' 		: 4,
 		'label_weights' 	: class_weight,
-		'lambda'			: 5
+		'lambda'			: 2.5,
+		'lr_schedule'		: [15, 25, 35],
+		'classes'			: name_classes
 	}
 }
 
