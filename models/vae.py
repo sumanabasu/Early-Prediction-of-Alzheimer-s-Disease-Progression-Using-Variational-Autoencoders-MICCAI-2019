@@ -3,6 +3,7 @@ Convolutional Neural Network with reconstrcution loss of euto-encoder as regular
 '''
 import torch.nn as nn
 from configurations.modelConfig import layer_config, params, num_classes
+from torch.distributions import Normal
 
 
 def crop(layer, target_size):
@@ -18,11 +19,11 @@ def crop(layer, target_size):
 	return layer
 
 
-class AutoEncoder(nn.Module):
+class VAE(nn.Module):
 	"""Cnn with simple architecture of 6 stacked convolution layers followed by a fully connected layer"""
 	
 	def __init__(self):
-		super(AutoEncoder, self).__init__()
+		super(VAE, self).__init__()
 		self.conv1 = nn.Conv3d(in_channels=layer_config['conv1']['in_channels'],
 							   out_channels=layer_config['conv1']['out_channels'],
 							   kernel_size=layer_config['conv1']['kernel_size'], stride=layer_config['conv1']['stride'],
@@ -61,6 +62,8 @@ class AutoEncoder(nn.Module):
 										 kernel_size=layer_config['tconv4']['kernel_size'],
 										 stride=layer_config['tconv4']['stride'],
 										 padding=layer_config['tconv4']['padding'])
+		
+		self.lineare = nn.Linear(layer_config['fc1']['in'], layer_config['z_dim'] * 2)
 
 		self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
 	
@@ -127,11 +130,19 @@ class AutoEncoder(nn.Module):
 		
 		x = self.dropout3d(self.relu(self.bn4(self.maxpool(self.conv4(x)))))
 		#self.shapes.append(x.size()[-3:])
-		# print(x.size())
 		#print('encoder : ', self.shapes)
 		#print(x.size())
 		
-		return x
+		gaussian_params = self.lineare(x)
+		
+		mu = gaussian_params[:, :layer_config['z_dim']]
+		sigma = gaussian_params[:, layer_config['z_dim']:]
+		
+		return mu, sigma
+	
+	def reparametrize(self, mu, sigma):
+		z = Normal(loc=mu, scale=sigma)
+		return z
 	
 	def decoder(self, x):
 		#print('decoder : ', x.size())
@@ -173,12 +184,17 @@ class AutoEncoder(nn.Module):
 	
 	def forward(self, x):
 		# encoder
-		enc_x = self.encoder(x)
+		mu, sigma = self.encoder(x)
+		print(mu.size(), sigma.size())
+		
+		#reparameterize
+		z = self.reparametrize(mu, sigma)
+		print(z.size())
 		
 		# decoder
-		x_hat = self.decoder(enc_x)
+		x_hat = self.decoder(z)
 		
 		# classifier
-		class_prob = self.classifier(enc_x)
+		class_prob = self.classifier(z)
 		
 		return x_hat, class_prob

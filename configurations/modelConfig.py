@@ -15,35 +15,36 @@ for _ in range(num_conv):
 layer_config = {
 	'conv1': {
 		'in_channels': 1,
-		'out_channels': 11,
+		'out_channels': 4,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
 	},
 	'conv2': {
-		'in_channels': 11,
-		'out_channels': 11,
+		'in_channels': 4,
+		'out_channels': 8,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
 	},
 	'conv3': {
-		'in_channels': 11,
-		'out_channels': 11,
+		'in_channels': 8,
+		'out_channels': 16,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
 	},
 	'conv4': {
-		'in_channels': 11,
-		'out_channels': 11,
+		'in_channels': 16,
+		'out_channels': 32,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
 	},
+	'z_dim'	: 32 * int(np.prod(img_shape[:])),
 	
 	'fc1': {
-		'in': 11 * int(np.prod(img_shape[:])), #14 * 13 * 12,
+		'in': 32 * int(np.prod(img_shape[:])), #14 * 13 * 12,
 		'out': 4096
 	},
 	'fc2': {
@@ -52,31 +53,31 @@ layer_config = {
 	},
 	
 	'tconv1': {
-		'in_channels': 11,
-		'out_channels': 11,
+		'in_channels': 32,
+		'out_channels': 16,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
 		#'output_padding' : 1	#(0, 0, 1)
 	},
 	'tconv2': {
-		'in_channels': 11,
-		'out_channels': 11,
+		'in_channels': 16,
+		'out_channels': 8,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
 		#'output_padding' : 1
 	},
 	'tconv3': {
-		'in_channels': 11,
-		'out_channels': 11,
+		'in_channels': 8,
+		'out_channels': 4,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
 		#'output_padding' : 1	#(0, 0, 0)
 	},
 	'tconv4': {
-		'in_channels': 11,
+		'in_channels': 4,
 		'out_channels': 1,
 		'kernel_size': 3,
 		'stride': 1,
@@ -102,7 +103,7 @@ params = {
 	
 	'train'	:	{
 		'learning_rate' 	: 0.0001,
-		'num_epochs' 		: 100,
+		'num_epochs' 		: 150,
 		'batch_size' 		: 4,
 		'label_weights' 	: class_weight,
 		'lambda'			: 2.5,
