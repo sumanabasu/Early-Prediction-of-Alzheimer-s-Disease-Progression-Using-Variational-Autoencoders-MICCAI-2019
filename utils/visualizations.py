@@ -85,8 +85,8 @@ def plot_confusion_matrix(cm,
 	plt.xlabel('Predicted label')
 	
 	plt.savefig(os.path.join(location, title))
-	savePickle(location, title, cm)
-	savePickle(location, title+'(normalized)', cmn)
+	savePickle(location, title + '.pkl', cm)
+	savePickle(location, title+'(normalized)'+'.pkl', cmn)
 	
 def plotROC(cm, location, title):
 	fpr = cm[0,1] * 1. / np.sum(cm[0,:])
