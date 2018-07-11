@@ -86,6 +86,7 @@ def plot_confusion_matrix(cm,
 	
 	plt.savefig(os.path.join(location, title))
 	savePickle(location, title + '.pkl', cm)
+	savePickle(location, title+'.pkl', cm)
 	savePickle(location, title+'(normalized)'+'.pkl', cmn)
 	
 def plotROC(cm, location, title):
