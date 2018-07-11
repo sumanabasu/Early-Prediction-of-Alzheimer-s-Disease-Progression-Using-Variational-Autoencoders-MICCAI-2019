@@ -7,7 +7,7 @@ from torch.autograd import Variable
 from configurations.modelConfig import params, num_classes
 from tqdm import tqdm
 import numpy as np
-from utils.visualizations import plot_confusion_matrix
+from utils.visualizations import plot_confusion_matrix, plot_embedding
 from utils.metrics import updateConfusionMatrix, calculateF1Score
 from tensorboardX import SummaryWriter
 from utils.save import saveModelandMetrics
@@ -192,12 +192,15 @@ class Trainer(object):
 		correct =0
 		test_losses = 0
 		cm = np.zeros((num_classes, num_classes), int)
+		embedding = []
+		pred_labels = []
+		act_labels = []
 		
 		pb = tqdm(total=len(self.valid_loader))
 		
 		for i, (images, labels) in enumerate(test_loader):
 			img = Variable(images, volatile=True).cuda()
-			outputs = self.model(img)
+			outputs, features = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
 			correct += ((predicted.cpu() == labels).float().mean())
@@ -209,6 +212,9 @@ class Trainer(object):
 			
 			del img
 			pb.update(1)
+			embedding.extend(np.array(features.data.cpu().numpy()))
+			pred_labels.extend(np.array(predicted.cpu().numpy()))
+			act_labels.extend(np.array(labels.numpy()))
 		
 		pb.close()
 		
@@ -224,6 +230,15 @@ class Trainer(object):
 		
 		# F1 Score
 		print('F1 Score : ', calculateF1Score(cm))
+		
+		# plot PCA or tSNE
+		embedding = np.array(embedding)
+		pred_labels = np.array(pred_labels)
+		act_labels = np.array(act_labels)
+		#print(embedding.shape)
+		print(pred_labels.shape)
+		plot_embedding(embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder)
+		plot_embedding(embedding, act_labels, pred_labels, mode='pca', location = self.expt_folder)
 		
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')

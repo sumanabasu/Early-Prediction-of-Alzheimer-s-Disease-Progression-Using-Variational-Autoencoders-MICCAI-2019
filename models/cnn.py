@@ -98,4 +98,4 @@ class CnnVanilla(nn.Module):
 		output = self.logsoftmax(self.fc2(fcc1))
 		#print(output.size())
 		
-		return output
+		return output, fcc1
