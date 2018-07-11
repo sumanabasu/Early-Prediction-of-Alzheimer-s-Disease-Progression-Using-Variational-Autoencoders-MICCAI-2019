@@ -79,10 +79,11 @@ params = {
 	},
 	
 	'train'	:	{
-		'learning_rate' 	: 0.0001,
+		'learning_rate' 	: 0.001,
 		'num_epochs' 		: 100,
 		'batch_size' 		: 4,
-		'label_weights' 	: class_weight
+		'label_weights' 	: class_weight,
+		'lr_schedule'		: [15, 25, 35]
 	}
 }
 
