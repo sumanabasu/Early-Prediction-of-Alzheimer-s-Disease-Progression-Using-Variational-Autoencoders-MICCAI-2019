@@ -235,8 +235,7 @@ class Trainer(object):
 		embedding = np.array(embedding)
 		pred_labels = np.array(pred_labels)
 		act_labels = np.array(act_labels)
-		#print(embedding.shape)
-		print(pred_labels.shape)
+		
 		plot_embedding(embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder)
 		plot_embedding(embedding, act_labels, pred_labels, mode='pca', location = self.expt_folder)
 		
