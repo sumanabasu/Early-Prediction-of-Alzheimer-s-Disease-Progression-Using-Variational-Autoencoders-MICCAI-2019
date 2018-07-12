@@ -18,6 +18,9 @@ def main():
 	expt_folder = base_folder + timestr
 	if not os.path.exists(expt_folder):
 		os.mkdir(expt_folder)
+	
+	# set seed
+	torch.manual_seed(params['train']['seed'])
 		
 	print('Run : {}\n'.format(timestr))
 
@@ -37,7 +40,7 @@ def main():
 	# create data generator
 	datafile = os.path.join(paths['data']['hdf5_path'], file_names['data']['hdf5_file'])
 	
-	train_loader, valid_loader, test_loader = dataLoader(datafile, trans=data_aug)
+	train_loader, valid_loader, test_loader = dataLoader(datafile, trans=None)
 
 	# create trainer and pass all required components to it
 	trainer = Trainer(model, train_loader, valid_loader, expt_folder)

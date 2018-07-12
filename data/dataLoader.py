@@ -26,6 +26,7 @@ class HDF5loader():
 		#self.label = [0 if x == 'NL' else 1 for x in f['NextLabel']]	#for binary classification on next label
 		
 	def __getitem__(self, index):
+		print(index)
 		img = self.img_f[index]
 		label = self.label[index]
 		
@@ -45,6 +46,7 @@ class HDF5loader():
 		# random transformation
 		if self.trans is not None and index in self.train_indices:
 			img = random_transform(img, **self.trans)
+			print('I am ruining you!')
 		
 		# reshape back to (channels, depth, 0, 1)
 		img = np.moveaxis(img, 3, 0)
@@ -110,8 +112,9 @@ def run_test_():
 		
 		pbt = tqdm(total=len(train_loader))
 		
-		for batch_idx, (images, labels) in enumerate(train_loader):
+		for batch_idx, (images, labels) in enumerate(test_loader):
 			#print('batch ' + str(batch_idx) + ' out of ' + str(len(train_loader)))
+			print(images.max(), images.min())
 			pbt.update(1)
 		pbt.close()
 	

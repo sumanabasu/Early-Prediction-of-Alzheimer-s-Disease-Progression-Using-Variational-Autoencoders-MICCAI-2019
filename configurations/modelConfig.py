@@ -70,11 +70,12 @@ layer_config = {
 
 params = {
 	'model': {
-		'conv_drop_prob': 0.2,
+		'conv_drop_prob': 0.0,
 		'fcc_drop_prob'	: 0.0
 	},
 	
 	'train'	:	{
+		'seed'				: 42,
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
 		'batch_size' 		: 4,

@@ -49,7 +49,7 @@ class CnnVanilla(nn.Module):
 		self.adaptiveMp3d = nn.AdaptiveMaxPool3d(layer_config['maxpool3d']['adaptive'])
 		
 		self.relu = nn.ReLU()
-		self.logsoftmax = nn.LogSoftmax(dim=0)
+		self.softmax = nn.Softmax(dim=1)
 		
 		#self.maxpool3d = nn.MaxPool3d(kernel_size=(3, 1, 1), stride=(3, 1, 1))
 		
@@ -94,8 +94,9 @@ class CnnVanilla(nn.Module):
 		
 		# output = self.dropout(self.relu(self.fc2(fcc1)))
 		# print(fcc2.size())
+		fcc2 = self.fc2(fcc1)
 		
-		output = self.logsoftmax(self.fc2(fcc1))
+		output = self.softmax(fcc2)
 		#print(output.size())
 		
-		return output, fcc1
+		return output, x, out1, out2, out3, flat, fcc1, fcc2
