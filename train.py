@@ -13,6 +13,18 @@ from tensorboardX import SummaryWriter
 from utils.save import saveModelandMetrics
 from torch.optim.lr_scheduler import MultiStepLR
 from utils.visualizations import plotROC
+import pickle
+from configurations.paths import paths, file_names
+import os
+
+train_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+											  file_names['data']['Train_set_indices']), 'r'))
+
+valid_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+											  file_names['data']['Valid_set_indices']), 'r'))
+
+test_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+											 file_names['data']['Test_set_indices']), 'r'))
 
 class Trainer(object):
 	def __init__(self, model, train_loader, valid_loader, expt_folder):
@@ -83,8 +95,8 @@ class Trainer(object):
 		
 		pbt.close()
 		
-		minibatch_losses /= len(self.train_loader)
-		minibatch_accuracy /= len(self.train_loader)
+		minibatch_losses /= len(train_indices)
+		minibatch_accuracy /= len(train_indices)
 			
 		# Plot losses
 		self.writer.add_scalar('train_loss', minibatch_losses , self.curr_epoch)
@@ -111,7 +123,7 @@ class Trainer(object):
 		
 		# Forward + Backward + Optimize
 		self.optimizer.zero_grad()
-		outputs = self.model(images)
+		outputs, _ = self.model(images)
 		
 		loss = self.criterion(outputs, labels)
 		loss.backward()
@@ -120,7 +132,7 @@ class Trainer(object):
 		
 		# Compute accuracy
 		_, pred_labels = torch.max(outputs, 1)
-		accuracy = (labels == pred_labels).float().mean()
+		accuracy = (labels == pred_labels).float().sum()
 		
 		# Print metrics
 		if batch_idx % 100 == 0:
@@ -147,10 +159,10 @@ class Trainer(object):
 		
 		for i, (images, labels) in enumerate(self.valid_loader):
 			img = Variable(images, volatile=True).cuda()
-			outputs = self.model(img)
+			outputs, _ = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
-			correct += ((predicted.cpu() == labels).float().mean())
+			correct += ((predicted.cpu() == labels).float().sum())
 			
 			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())
 			
@@ -162,7 +174,7 @@ class Trainer(object):
 			
 		pb.close()
 		
-		correct /= len(self.valid_loader)
+		correct /= len(valid_indices)
 		
 		print('Validation Accuracy : %0.6f' % correct)
 		
@@ -195,26 +207,17 @@ class Trainer(object):
 		embedding = []
 		pred_labels = []
 		act_labels = []
-		softmax = []
-		xx = []
-		outt1 = []
-		outt2 = []
-		outt3 = []
-		flatt = []
-		fccc1 = []
-		fccc2 = []
 		
 		pb = tqdm(total=len(self.valid_loader))
 		
 		for i, (images, labels) in enumerate(test_loader):
 			img = Variable(images, volatile=True).cuda()
-			outputs, x, out1, out2, out3, flat, fcc1, fcc2 = self.model(img)
+			outputs, features = self.model(img)
 			#outputs = outputs.exp()
 			#print(outputs.size(), features.size())
-			#import pdb; pdb.set_trace()
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
-			correct += ((predicted.cpu() == labels).float().mean())
+			correct += ((predicted.cpu() == labels).float().sum())
 			
 			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())
 			
@@ -223,31 +226,15 @@ class Trainer(object):
 			
 			del img
 			pb.update(1)
-			'''
+		
 			embedding.extend(np.array(features.data.cpu().numpy()))
 			pred_labels.extend(np.array(predicted.cpu().numpy()))
 			act_labels.extend(np.array(labels.numpy()))
-			'''
-			softmax.extend(outputs.data.cpu().numpy())
-			xx.extend(x.data.cpu().numpy())
-			outt1.extend(out1.data.cpu().numpy())
-			outt2.extend(out2.data.cpu().numpy())
-			outt3.extend(out3.data.cpu().numpy())
-			flatt.extend(flat.data.cpu().numpy())
-			fccc1.extend(fcc1.data.cpu().numpy())
-			fccc2.extend(fcc2.data.cpu().numpy())
-			
-			if i == 3:
-				import pdb;
-				pdb.set_trace()
-				np.savez(self.expt_folder+'/softmax.pkl', softmax=softmax, xx=xx, outt1=outt1, outt2=outt2,
-						 outt3=outt3, flatt=flatt, fccc1=fccc1, fccc2=fccc2)
-				exit(1)
 		
 		pb.close()
 		
-		correct /= len(test_loader)
-		test_losses /= len(test_loader)
+		correct /= len(test_indices)
+		test_losses /= len(test_indices)
 		
 		print('Test Accuracy : %0.6f' % correct)
 		print('Test Losses : %0.6f' % test_losses)
@@ -263,17 +250,9 @@ class Trainer(object):
 		embedding = np.array(embedding)
 		pred_labels = np.array(pred_labels)
 		act_labels = np.array(act_labels)
-		softmax = np.array(softmax)
-		print('softmax : ', np.array(softmax))
-		from utils.save import savePickle
-		savePickle(self.expt_folder, 'softmax.pkl', softmax)
-		import pdb;
-		pdb.set_trace()
 		
-		'''
 		plot_embedding(embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder)
 		plot_embedding(embedding, act_labels, pred_labels, mode='pca', location = self.expt_folder)
-		'''
 		
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')

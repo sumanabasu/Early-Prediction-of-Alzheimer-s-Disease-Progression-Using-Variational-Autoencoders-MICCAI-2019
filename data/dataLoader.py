@@ -26,7 +26,6 @@ class HDF5loader():
 		#self.label = [0 if x == 'NL' else 1 for x in f['NextLabel']]	#for binary classification on next label
 		
 	def __getitem__(self, index):
-		print(index)
 		img = self.img_f[index]
 		label = self.label[index]
 		
@@ -37,7 +36,7 @@ class HDF5loader():
 		#print('1. ', img.shape)	#(1, 233, 197, 189)
 		
 		# drop 10 slices on either side since they are mostly black
-		img = img[:, 10:-10, ::]
+		img = img[:, 10:-10, :,:]
 		
 		# reshape to (depth, 0, 1, channels) for data augmentation
 		img = np.moveaxis(img, 0, 3)
@@ -46,7 +45,7 @@ class HDF5loader():
 		# random transformation
 		if self.trans is not None and index in self.train_indices:
 			img = random_transform(img, **self.trans)
-			print('I am ruining you!')
+			#print('I am ruining you!')
 		
 		# reshape back to (channels, depth, 0, 1)
 		img = np.moveaxis(img, 3, 0)
@@ -57,7 +56,7 @@ class HDF5loader():
 			mean = np.mean(img)
 			std = np.std(img)
 			img = 1.0 * (img - mean) / std
-		
+
 		img = img.astype(float)
 		img = torch.from_numpy(img).float()
 		label = torch.LongTensor([label])
@@ -69,7 +68,7 @@ class HDF5loader():
 	
 def dataLoader(hdf5_file, trans):
 	
-	num_workers = 4
+	num_workers = 1
 	pin_memory = False
 	
 	train_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
@@ -100,25 +99,47 @@ def dataLoader(hdf5_file, trans):
 
 def run_test_():
 	from configurations.modelConfig import data_aug
-	max_epochs = 10
+	max_epochs = 1
 	
 	datafile = os.path.join(paths['data']['hdf5_path'], file_names['data']['hdf5_file'])
 	train_loader, valid_loader, test_loader = dataLoader(datafile, trans=data_aug)
 	
+	print(len(test_loader))
+	
+	'''
+	
 	from tqdm import tqdm
+	
+	indices = []
+	img_sums = []
+	img_sums_before_float = []
+	filenames = []
 	
 	for ep in range(max_epochs):
 		print('Epoch ' + str(ep) + ' out of ' + str(max_epochs))
 		
-		pbt = tqdm(total=len(train_loader))
+		pbt = tqdm(total=len(test_loader))
 		
-		for batch_idx, (images, labels) in enumerate(test_loader):
+		for batch_idx, (images, labels, index, sum_, fn) in enumerate(test_loader):
 			#print('batch ' + str(batch_idx) + ' out of ' + str(len(train_loader)))
-			print(images.max(), images.min())
+			indices.extend(index)
+			img_sums_before_float.extend(sum_)
+			images = images.view(images.size(0), -1)
+			#print(images.shape)
+			img_sums.extend(torch.sum(images, dim=1))
+			#print(images.max(), images.min())
+			filenames.extend(fn)
 			pbt.update(1)
 		pbt.close()
+		
+		#print(indices)
+		#print(img_sums)
+		#print(img_sums_before_float)
+		#print(filenames)
+	'''
+
 	
-	
+'''
 def run_tests():
 	n_gpus = 1
 	
@@ -147,7 +168,7 @@ def run_tests():
 			batch_x, batch_y = data_
 			print('batch ' + str(batch_idx) + str(batch_y) + ' out of ' + str(len(valid_iter)))
 		
-		
+'''
 #run_tests()
 
 #run_test_()
