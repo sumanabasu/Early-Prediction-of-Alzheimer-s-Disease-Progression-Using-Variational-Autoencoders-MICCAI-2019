@@ -4,6 +4,7 @@ train model
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+import torch.nn.functional as F
 from configurations.modelConfig import params, num_classes
 from tqdm import tqdm
 import numpy as np
@@ -26,7 +27,7 @@ class Trainer(object):
 		self.optimizer = torch.optim.Adam(model.parameters(),
 										  lr=params['train']['learning_rate'])
 		self.classification_criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
-		self.autoencoder_criterion = nn.MSELoss()
+		#self.autoencoder_criterion = nn.MSELoss()
 		
 		self.curr_epoch = 0
 		self.batchstep = 0
@@ -34,10 +35,20 @@ class Trainer(object):
 		self.expt_folder = expt_folder
 		self.writer = SummaryWriter(log_dir=expt_folder)
 		
-		self.train_losses_class, self.train_losses_reconst, self.valid_losses, self.train_f1_Score, self.valid_f1_Score,\
-		self.train_accuracy, self.valid_accuracy = ([] for i in range(7))
+		self.train_losses_class, self.train_losses_reconst, self.train_losses_kld, self.valid_losses, \
+		self.train_f1_Score, \
+		self.valid_f1_Score,\
+		self.train_accuracy, self.valid_accuracy = ([] for i in range(8))
 		
 		#self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
+	def vae_loss(self, recon_x, x, mu, logvar):
+		BCE = F.binary_cross_entropy(recon_x, x, size_average=False)
+		# BCE = F.mse_loss(recon_x, x, size_average=False)
+		
+		KLD = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
+		
+		return BCE + KLD, BCE, KLD
+	
 		
 	
 	def train(self):
@@ -123,11 +134,11 @@ class Trainer(object):
 		# Forward + Backward + Optimize
 		
 		# x_hat is reconstructed image, p_hat is predicted classification probability
-		x_hat, p_hat = self.model(images)
+		z, mu, logvar, x_hat, p_hat = self.model(images)
 		classification_loss = self.classification_criterion(p_hat, labels)
-		reconstruction_loss = self.autoencoder_criterion(x_hat, images)
+		vae_loss, bce, kld = self.vae_loss(x_hat, images, mu, logvar)
 		
-		loss = classification_loss + params['train']['lambda'] * reconstruction_loss
+		loss = classification_loss + params['train']['lambda'] * vae_loss
 		
 		self.optimizer.zero_grad()
 		#classification_loss.backward(retain_graph=True)
@@ -148,7 +159,7 @@ class Trainer(object):
 					 len(self.train_loader),
 					 classification_loss.data[0],
 					 accuracy,
-				  reconstruction_loss.data[0]))
+				  vae_loss.data[0]))
 			
 		cm = updateConfusionMatrix(labels.data.cpu().numpy(), pred_labels.data.cpu().numpy())
 		

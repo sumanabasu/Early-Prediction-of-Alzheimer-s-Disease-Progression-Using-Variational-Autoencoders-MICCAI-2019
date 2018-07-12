@@ -3,6 +3,7 @@ import numpy as np
 num_classes = 2
 name_classes = np.asarray(['NL', 'Diseased'])
 class_weight = [1, 1]
+latent_dim = 1024
 
 num_conv = 4
 img_shape = np.array([213, 197, 189])
@@ -41,14 +42,15 @@ layer_config = {
 		'stride': 1,
 		'padding': 1
 	},
-	'z_dim'	: 32 * int(np.prod(img_shape[:])),
+	'gaussian'	: 32 * int(np.prod(img_shape[:])), #14 * 13 * 12,,
+	'z_dim'	:	latent_dim,
 	
 	'fc1': {
-		'in': 32 * int(np.prod(img_shape[:])), #14 * 13 * 12,
-		'out': 4096
+		'in': latent_dim , #14 * 13 * 12,
+		'out': 1024
 	},
 	'fc2': {
-		'in': 4096,
+		'in': 1024,
 		'out': num_classes
 	},
 	

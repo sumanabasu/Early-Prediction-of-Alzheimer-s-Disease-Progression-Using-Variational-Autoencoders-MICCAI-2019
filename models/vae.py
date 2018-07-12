@@ -1,9 +1,11 @@
 '''
 Convolutional Neural Network with reconstrcution loss of euto-encoder as regularization
 '''
+import torch
 import torch.nn as nn
+from torch.autograd import Variable
 from configurations.modelConfig import layer_config, params, num_classes
-from torch.distributions import Normal
+from configurations.modelConfig import img_shape
 
 
 def crop(layer, target_size):
@@ -63,7 +65,9 @@ class VAE(nn.Module):
 										 stride=layer_config['tconv4']['stride'],
 										 padding=layer_config['tconv4']['padding'])
 		
-		self.lineare = nn.Linear(layer_config['fc1']['in'], layer_config['z_dim'] * 2)
+		self.fc_mean = nn.Linear(layer_config['gaussian'], layer_config['z_dim'])
+		self.fc_logvar = nn.Linear(layer_config['gaussian'], layer_config['z_dim'])
+		self.lineard = nn.Linear(layer_config['z_dim'], layer_config['gaussian'])
 
 		self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
 	
@@ -111,85 +115,93 @@ class VAE(nn.Module):
 			elif isinstance(m, nn.BatchNorm3d):
 				nn.init.constant(m.weight.data, 1)
 				nn.init.constant(m.bias.data, 0.01)
-	
+				
 	def encoder(self, x):
 		# print('encoder : ', x.size())
 		self.shapes.append(x.size()[-3:])
 		
 		x = self.dropout3d(self.relu(self.bn1(self.maxpool(self.conv1(x)))))
 		self.shapes.append(x.size()[-3:])
-		# print(x.size())
+		#print(x.size())
 		
 		x = self.dropout3d(self.relu(self.bn2(self.maxpool(self.conv2(x)))))
 		self.shapes.append(x.size()[-3:])
-		# print(x.size())
+		#print(x.size())
 		
 		x = self.dropout3d(self.relu(self.bn3(self.maxpool(self.conv3(x)))))
 		self.shapes.append(x.size()[-3:])
-		# print(x.size())
+		#print(x.size())
 		
 		x = self.dropout3d(self.relu(self.bn4(self.maxpool(self.conv4(x)))))
 		#self.shapes.append(x.size()[-3:])
 		#print('encoder : ', self.shapes)
 		#print(x.size())
 		
-		gaussian_params = self.lineare(x)
+		# flatten
+		h = x.view(x.size(0), -1)
+		#print(h.size())
 		
-		mu = gaussian_params[:, :layer_config['z_dim']]
-		sigma = gaussian_params[:, layer_config['z_dim']:]
+		mu = self.dropout(self.relu(self.fc_mean(h)))
+		logvar = self.dropout(self.relu(self.fc_logvar(h)))
 		
-		return mu, sigma
+		return mu, logvar
 	
-	def reparametrize(self, mu, sigma):
-		z = Normal(loc=mu, scale=sigma)
+	def reparametrize(self, mu, logvar):
+		sigma = torch.exp(0.5 * logvar)
+		eps = Variable(torch.randn(mu.size())).cuda()
+		z = mu + sigma * eps
 		return z
 	
-	def decoder(self, x):
+	def decoder(self, z):
 		#print('decoder : ', x.size())
+		x_hat = self.dropout(self.relu(self.lineard(z)))
+		#print(x_hat.size())
+		x_hat = x_hat.view(x_hat.size(0), -1, int(img_shape[0]), int(img_shape[1]), int(img_shape[2]))
+		#print(x_hat.size())
 		
-		x = self.dropout3d(self.relu(self.tbn1(self.tconv1(self.upsample(x)))))
-		x = crop(x, self.shapes[-1])
+		x_hat = self.dropout3d(self.relu(self.tbn1(self.tconv1(self.upsample(x_hat)))))
+		x_hat = crop(x_hat, self.shapes[-1])
 		self.shapes.pop()
-		#print(x.size())
+		#print(x_hat.size())
 		
-		x = self.dropout3d(self.relu(self.tbn2(self.tconv2(self.upsample(x)))))
-		x = crop(x, self.shapes[-1])
+		x_hat = self.dropout3d(self.relu(self.tbn2(self.tconv2(self.upsample(x_hat)))))
+		x_hat = crop(x_hat, self.shapes[-1])
 		self.shapes.pop()
-		#print(x.size())
+		#print(x_hat.size())
 		
-		x = self.dropout3d(self.relu(self.tbn3(self.tconv3(self.upsample(x)))))
-		x = crop(x, self.shapes[-1])
+		x_hat = self.dropout3d(self.relu(self.tbn3(self.tconv3(self.upsample(x_hat)))))
+		x_hat = crop(x_hat, self.shapes[-1])
 		self.shapes.pop()
-		#print(x.size())
+		#print(x_hat.size())
 		
-		x = self.dropout3d(self.relu(self.tbn4(self.tconv4(self.upsample(x)))))
-		x = crop(x, self.shapes[-1])
+		x_hat = self.dropout3d(self.relu(self.tbn4(self.tconv4(self.upsample(x_hat)))))
+		x_hat = crop(x_hat, self.shapes[-1])
 		self.shapes.pop()
-		#print(x.size())
+		#print(x_hat.size())
 		
-		return x
+		return x_hat
 	
-	def classifier(self, x):
-		x = x.view(x.size(0), -1)
+	def classifier(self, z):
+		
 		# print(x.size())
 		
-		x = self.dropout(self.relu(self.fc1(x)))
+		z = self.dropout(self.relu(self.fc1(z)))
 		# print(x.size())
 		
-		x = self.logsoftmax(self.fc2(x))
+		prob = self.logsoftmax(self.fc2(z))
 		
-		return x
+		return prob
 	
 	# print(output.size())
 	
 	def forward(self, x):
 		# encoder
-		mu, sigma = self.encoder(x)
-		print(mu.size(), sigma.size())
+		mu, logvar = self.encoder(x)
+		#print(mu.size(), logvar.size())
 		
 		#reparameterize
-		z = self.reparametrize(mu, sigma)
-		print(z.size())
+		z = self.reparametrize(mu, logvar)
+		#print(z.size())
 		
 		# decoder
 		x_hat = self.decoder(z)
@@ -197,4 +209,4 @@ class VAE(nn.Module):
 		# classifier
 		class_prob = self.classifier(z)
 		
-		return x_hat, class_prob
+		return z, mu, logvar, x_hat, class_prob
