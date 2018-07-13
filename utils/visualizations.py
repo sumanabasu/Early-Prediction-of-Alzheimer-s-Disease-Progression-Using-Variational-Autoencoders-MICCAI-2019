@@ -105,7 +105,7 @@ def plotROC(cm, location, title):
 	#plt.legend(loc="lower right")
 	plt.savefig(os.path.join(location, title))
 
-def plot_embedding(embedding, labels_actual, labels_predited, mode, location):
+def plot_embedding(embedding, labels_actual, labels_predited, mode, location, title):
 	plt.clf()
 	colors = ['green', 'red']
 	
@@ -146,7 +146,7 @@ def plot_embedding(embedding, labels_actual, labels_predited, mode, location):
 	cb.set_ticks(loc)
 	cb.set_ticklabels(['NL', 'Diseased'])
 	cb.set_label('Disease Label')
-	plt.savefig(os.path.join(location, mode + '.png'))
+	plt.savefig(os.path.join(location, title + '_' + mode + '.png'))
 
 def plot_accuracy(train_acc, test_acc, location, title='Accuracy'):
 	"""
