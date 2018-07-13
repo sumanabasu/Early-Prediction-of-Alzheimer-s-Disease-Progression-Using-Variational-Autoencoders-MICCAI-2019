@@ -85,7 +85,7 @@ class AutoEncoder(nn.Module):
 			'ln']['stride'], ceil_mode=True)
 		
 		self.relu = nn.ReLU()
-		self.logsoftmax = nn.LogSoftmax(dim=0)
+		self.logsoftmax = nn.LogSoftmax(dim=1)
 		
 		self.shapes = []
 		
@@ -165,9 +165,9 @@ class AutoEncoder(nn.Module):
 		x = self.dropout(self.relu(self.fc1(x)))
 		# print(x.size())
 		
-		x = self.logsoftmax(self.fc2(x))
+		out = self.logsoftmax(self.fc2(x))
 		
-		return x
+		return out, x
 	
 	# print(output.size())
 	
@@ -179,6 +179,6 @@ class AutoEncoder(nn.Module):
 		x_hat = self.decoder(enc_x)
 		
 		# classifier
-		class_prob = self.classifier(enc_x)
+		class_prob, classifier_embedding = self.classifier(enc_x)
 		
-		return x_hat, class_prob
+		return x_hat, class_prob, enc_x, classifier_embedding
