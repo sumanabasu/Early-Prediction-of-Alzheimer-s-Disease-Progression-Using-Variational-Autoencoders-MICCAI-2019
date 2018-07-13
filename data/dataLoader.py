@@ -67,7 +67,7 @@ class HDF5loader():
 	
 def dataLoader(hdf5_file, trans):
 	
-	num_workers = 4
+	num_workers = 1
 	pin_memory = False
 	
 	train_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
