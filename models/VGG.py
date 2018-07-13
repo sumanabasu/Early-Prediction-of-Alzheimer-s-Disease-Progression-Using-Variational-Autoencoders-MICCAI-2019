@@ -116,7 +116,7 @@ class VGG(nn.Module):
 		self.adaptiveMp3d = nn.AdaptiveMaxPool3d(layer_config['maxpool3d']['adaptive'])
 		
 		self.relu = nn.ReLU()
-		self.logsoftmax = nn.LogSoftmax(dim=0)
+		self.logsoftmax = nn.LogSoftmax(dim=1)
 		
 		# self.maxpool3d = nn.MaxPool3d(kernel_size=(3, 1, 1), stride=(3, 1, 1))
 		
