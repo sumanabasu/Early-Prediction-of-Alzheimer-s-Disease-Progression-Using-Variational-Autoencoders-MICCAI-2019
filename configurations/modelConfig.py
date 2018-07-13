@@ -80,7 +80,7 @@ params = {
 		'num_epochs' 		: 100,
 		'batch_size' 		: 4,
 		'label_weights' 	: class_weight,
-		'lr_schedule'		: [20, 40]
+		'lr_schedule'		: [15, 25, 35]
 	}
 }
 
