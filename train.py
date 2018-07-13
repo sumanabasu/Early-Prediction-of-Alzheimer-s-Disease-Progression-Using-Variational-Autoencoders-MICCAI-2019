@@ -7,11 +7,12 @@ from torch.autograd import Variable
 from configurations.modelConfig import params, num_classes
 from tqdm import tqdm
 import numpy as np
-from utils.visualizations import plot_confusion_matrix
+from utils.visualizations import plot_confusion_matrix, plot_embedding
 from utils.metrics import updateConfusionMatrix, calculateF1Score
 from tensorboardX import SummaryWriter
 from utils.save import saveModelandMetrics
 from torch.optim.lr_scheduler import MultiStepLR
+from data.splitDataset import getIndicesTrainValidTest
 from utils.visualizations import plotROC
 
 class Trainer(object):
@@ -36,6 +37,8 @@ class Trainer(object):
 		
 		self.train_losses_class, self.train_losses_reconst, self.valid_losses, self.train_f1_Score, self.valid_f1_Score,\
 		self.train_accuracy, self.valid_accuracy = ([] for i in range(7))
+		
+		self.trainset_size, self.validset_size, testset_size = getIndicesTrainValidTest(requireslen=True)
 		
 		#self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
 		
@@ -92,9 +95,9 @@ class Trainer(object):
 		
 		pbt.close()
 		
-		minibatch_losses_class /= len(self.train_loader)
-		minibatch_losses_reconst /= len(self.train_loader)
-		minibatch_accuracy /= len(self.train_loader)
+		minibatch_losses_class /= self.trainset_size
+		minibatch_losses_reconst /= self.trainset_size
+		minibatch_accuracy /= self.trainset_size
 		
 		# Plot losses
 		self.writer.add_scalar('train_classification_loss', minibatch_losses_class , self.curr_epoch)
@@ -123,7 +126,7 @@ class Trainer(object):
 		# Forward + Backward + Optimize
 		
 		# x_hat is reconstructed image, p_hat is predicted classification probability
-		x_hat, p_hat = self.model(images)
+		x_hat, p_hat, _, _ = self.model(images)
 		classification_loss = self.classification_criterion(p_hat, labels)
 		reconstruction_loss = self.autoencoder_criterion(x_hat, images)
 		
@@ -138,7 +141,7 @@ class Trainer(object):
 		
 		# Compute accuracy
 		_, pred_labels = torch.max(p_hat, 1)
-		accuracy = (labels == pred_labels).float().mean()
+		accuracy = (labels == pred_labels).float().sum()
 		
 		# Print metrics
 		if batch_idx % 100 == 0:
@@ -166,14 +169,19 @@ class Trainer(object):
 		correct = 0
 		cm = np.zeros((num_classes, num_classes), int)
 		
+		encoder_embedding = []
+		classifier_embedding = []
+		pred_labels = []
+		act_labels = []
+		
 		pb = tqdm(total=len(self.valid_loader))
 		
 		for i, (images, labels) in enumerate(self.valid_loader):
 			img = Variable(images, volatile=True).cuda()
-			_, outputs = self.model(img)
+			_, outputs, enc_emb, cls_emb = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
-			correct += ((predicted.cpu() == labels).float().mean())
+			correct += ((predicted.cpu() == labels).float().sum())
 			
 			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())
 			
@@ -183,9 +191,14 @@ class Trainer(object):
 			del img
 			pb.update(1)
 			
+			encoder_embedding.extend(np.array(enc_emb))
+			classifier_embedding.extend(np.array(cls_emb))
+			pred_labels.extend(np.array(predicted.cpu().numpy()))
+			act_labels.extend(np.array(labels.numpy()))
+			
 		pb.close()
 		
-		correct /= len(self.valid_loader)
+		correct /= self.validset_size
 		
 		print('Validation Accuracy : %0.6f' % correct)
 		
@@ -205,6 +218,22 @@ class Trainer(object):
 		print('F1 Score : ', calculateF1Score(cm))
 		self.valid_f1_Score.append(f1_score)
 		
+		#plot PCA or tSNE
+		encoder_embedding = np.array(encoder_embedding)
+		classifier_embedding = np.array(classifier_embedding)
+		pred_labels = np.array(pred_labels)
+		act_labels = np.array(act_labels)
+		
+		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
+					   title='encoder_embedding_valid')
+		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
+					   title='encoder_embedding_valid')
+		
+		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
+					   title='classifier_embedding_valid')
+		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
+					   title='classifier_embedding_valid')
+		
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Valid)')
 	
@@ -216,14 +245,19 @@ class Trainer(object):
 		test_losses = 0
 		cm = np.zeros((num_classes, num_classes), int)
 		
+		encoder_embedding = []
+		classifier_embedding = []
+		pred_labels = []
+		act_labels = []
+		
 		pb = tqdm(total=len(self.valid_loader))
 		
 		for i, (images, labels) in enumerate(test_loader):
 			img = Variable(images, volatile=True).cuda()
-			_, outputs = self.model(img)
+			_, outputs, enc_emb, cls_emb = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
-			correct += ((predicted.cpu() == labels).float().mean())
+			correct += ((predicted.cpu() == labels).float().sum())
 			
 			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())
 			
@@ -235,8 +269,8 @@ class Trainer(object):
 		
 		pb.close()
 		
-		correct /= len(test_loader)
-		test_losses /= len(test_loader)
+		correct /= self.testset_size
+		test_losses /= self.testset_size
 		
 		print('Test Accuracy : %0.6f' % correct)
 		print('Test Losses : %0.6f' % test_losses)
@@ -247,6 +281,22 @@ class Trainer(object):
 		
 		# F1 Score
 		print('F1 Score : ', calculateF1Score(cm))
+		
+		# plot PCA or tSNE
+		encoder_embedding = np.array(encoder_embedding)
+		classifier_embedding = np.array(classifier_embedding)
+		pred_labels = np.array(pred_labels)
+		act_labels = np.array(act_labels)
+		
+		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
+					   title='encoder_embedding_test')
+		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
+					   title='encoder_embedding_test')
+		
+		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
+					   title='classifier_embedding_test')
+		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
+					   title='classifier_embedding_test')
 		
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
