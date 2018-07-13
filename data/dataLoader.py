@@ -12,6 +12,7 @@ import pickle
 from configurations.modelConfig import params
 from random import shuffle
 from dataAugmentation import random_transform
+from data.splitDataset import getIndicesTrainValidTest
 import torchvision.transforms as transforms
 
 class HDF5loader():
@@ -70,6 +71,8 @@ def dataLoader(hdf5_file, trans):
 	num_workers = 1
 	pin_memory = False
 	
+	'''
+	
 	train_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
 												   file_names['data']['Train_set_indices']), 'r'))
 	shuffle(train_indices)
@@ -79,6 +82,10 @@ def dataLoader(hdf5_file, trans):
 	
 	test_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
 												   file_names['data']['Test_set_indices']), 'r'))
+	'''
+	
+	train_indices, valid_indices, test_indices = getIndicesTrainValidTest()
+	shuffle(train_indices)
 	
 	train_sampler = SubsetRandomSampler(train_indices)
 	valid_sampler = SubsetRandomSampler(valid_indices)
