@@ -16,6 +16,8 @@ from save import savePickle
 import torch
 from configurations.modelConfig import name_classes
 from sklearn.metrics import auc
+from sklearn import decomposition
+from sklearn.manifold import TSNE
 
 def visualizeSlices(mri, mri_flag, location, file_name):
 	'''
@@ -120,7 +122,6 @@ def plot_embedding(embedding, labels_actual, labels_predited, mode, location):
 	
 	elif mode == 'tsne':
 		# tSNE
-		from sklearn.manifold import TSNE
 		tsne = TSNE(n_components=2, init='random', random_state=0)
 		x_embedded = tsne.fit_transform(embedding)
 	else:
