@@ -70,7 +70,7 @@ layer_config = {
 
 params = {
 	'model': {
-		'conv_drop_prob': 0.0,
+		'conv_drop_prob': 0.2,
 		'fcc_drop_prob'	: 0.0
 	},
 	
