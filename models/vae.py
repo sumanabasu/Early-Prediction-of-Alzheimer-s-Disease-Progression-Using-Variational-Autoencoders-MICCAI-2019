@@ -92,7 +92,7 @@ class VAE(nn.Module):
 			'ln']['stride'], ceil_mode=True)
 		
 		self.relu = nn.ReLU()
-		self.logsoftmax = nn.LogSoftmax(dim=0)
+		self.logsoftmax = nn.LogSoftmax(dim=1)
 		
 		self.shapes = []
 		
