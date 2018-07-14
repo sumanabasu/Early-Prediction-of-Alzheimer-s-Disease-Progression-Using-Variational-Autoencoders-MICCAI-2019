@@ -42,12 +42,12 @@ class Trainer(object):
 		
 		#self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
 	def vae_loss(self, recon_x, x, mu, logvar):
-		BCE = F.binary_cross_entropy(recon_x, x, size_average=False)
+		MSE = nn.MSELoss(recon_x, x)
 		# BCE = F.mse_loss(recon_x, x, size_average=False)
 		
 		KLD = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
 		
-		return BCE + KLD, BCE, KLD
+		return MSE + KLD, MSE, KLD
 	
 		
 	
@@ -134,9 +134,9 @@ class Trainer(object):
 		# Forward + Backward + Optimize
 		
 		# x_hat is reconstructed image, p_hat is predicted classification probability
-		z, mu, logvar, x_hat, p_hat = self.model(images)
+		_, mu, logvar, x_hat, p_hat = self.model(images)
 		classification_loss = self.classification_criterion(p_hat, labels)
-		vae_loss, bce, kld = self.vae_loss(x_hat, images, mu, logvar)
+		vae_loss, mse, kld = self.vae_loss(x_hat, images, mu, logvar)
 		
 		loss = classification_loss + params['train']['lambda'] * vae_loss
 		
@@ -149,7 +149,7 @@ class Trainer(object):
 		
 		# Compute accuracy
 		_, pred_labels = torch.max(p_hat, 1)
-		accuracy = (labels == pred_labels).float().mean()
+		accuracy = (labels == pred_labels).float().sum()
 		
 		# Print metrics
 		if batch_idx % 100 == 0:
