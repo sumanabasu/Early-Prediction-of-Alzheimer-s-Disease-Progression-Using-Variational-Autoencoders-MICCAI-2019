@@ -169,16 +169,11 @@ class Trainer(object):
 		correct = 0
 		cm = np.zeros((num_classes, num_classes), int)
 		
-		encoder_embedding = []
-		classifier_embedding = []
-		pred_labels = []
-		act_labels = []
-		
 		pb = tqdm(total=len(self.valid_loader))
 		
 		for i, (images, labels) in enumerate(self.valid_loader):
 			img = Variable(images, volatile=True).cuda()
-			_, outputs, enc_emb, cls_emb = self.model(img)
+			_, outputs, _, _ = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
 			labels = labels.view(-1, )
 			correct += ((predicted.cpu() == labels).float().sum())
@@ -190,11 +185,6 @@ class Trainer(object):
 			
 			del img
 			pb.update(1)
-			
-			encoder_embedding.extend(np.array(enc_emb))
-			classifier_embedding.extend(np.array(cls_emb))
-			pred_labels.extend(np.array(predicted.cpu().numpy()))
-			act_labels.extend(np.array(labels.numpy()))
 			
 		pb.close()
 		
@@ -217,22 +207,6 @@ class Trainer(object):
 		self.writer.add_scalar('valid_f1_score', f1_score, self.curr_epoch)
 		print('F1 Score : ', calculateF1Score(cm))
 		self.valid_f1_Score.append(f1_score)
-		
-		#plot PCA or tSNE
-		encoder_embedding = np.array(encoder_embedding)
-		classifier_embedding = np.array(classifier_embedding)
-		pred_labels = np.array(pred_labels)
-		act_labels = np.array(act_labels)
-		
-		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
-					   title='encoder_embedding_valid')
-		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
-					   title='encoder_embedding_valid')
-		
-		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
-					   title='classifier_embedding_valid')
-		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
-					   title='classifier_embedding_valid')
 		
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Valid)')
