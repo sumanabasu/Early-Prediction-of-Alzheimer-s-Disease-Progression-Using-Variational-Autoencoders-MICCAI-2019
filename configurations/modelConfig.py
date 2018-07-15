@@ -80,7 +80,7 @@ layer_config = {
 	},
 	'tconv4': {
 		'in_channels': 11,
-		'out_channels': 11,
+		'out_channels': 1,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1

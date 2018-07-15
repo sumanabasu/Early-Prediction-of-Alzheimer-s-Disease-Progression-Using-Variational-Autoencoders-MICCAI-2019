@@ -49,9 +49,6 @@ class Trainer(object):
 		
 		KLD = (-0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()))
 		
-		print('MSE :', MSE)
-		print('KLD : ', KLD)
-		
 		return MSE + KLD, MSE, KLD
 	
 	def train(self):
