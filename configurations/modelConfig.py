@@ -51,6 +51,10 @@ layer_config = {
 	},
 	'fc2': {
 		'in': 4096,
+		'out': 1024
+	},
+	'fc3': {
+		'in': 1024,
 		'out': num_classes
 	},
 	
