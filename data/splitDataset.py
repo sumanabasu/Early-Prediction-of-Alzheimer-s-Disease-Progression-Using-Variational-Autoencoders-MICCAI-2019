@@ -5,7 +5,7 @@ returns MRI indices for fixed train, valid and test set
 import pandas as pd
 import numpy as np
 import itertools
-import cPickle
+import pickle
 import os
 from paths import paths, file_names
 
@@ -62,11 +62,29 @@ def getTrainValidTestSplit(label_file,
 					'wb')
 	cPickle.dump(test_idx, pkl_file)
 	pkl_file.close()
-	
-	
+
+
+'''
+# Run only when new splits are to be created
 getTrainValidTestSplit(label_file=os.path.join(paths['data']['Input_to_Training_Model'],
 											   file_names['data']['MRI_to_next_label_mapping']),
 					   rid_file=os.path.join(paths['data']['Input_to_Training_Model'],
 											 file_names['data']['RIDtoMRI']),
 					   shuffle=True,
 					   random_seed=200)
+'''
+
+
+def getIndicesTrainValidTest(requireslen=False):
+	train_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+												  file_names['data']['Train_set_indices']), 'r'))
+	
+	valid_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+												  file_names['data']['Valid_set_indices']), 'r'))
+	
+	test_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+												 file_names['data']['Test_set_indices']), 'r'))
+	if requireslen == True:
+		return len(train_indices), len(valid_indices), len(test_indices)
+	else:
+		return train_indices, valid_indices, test_indices
