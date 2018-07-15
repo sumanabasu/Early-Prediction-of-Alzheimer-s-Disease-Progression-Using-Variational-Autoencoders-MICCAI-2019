@@ -31,7 +31,9 @@ file_names = {
 	'output'	:	{
 		'parameters'							:	'parameters.json',
 		'train_loss_classification'				:	'train_loss_classification.pkl',
-		'train_loss_reconstruction'				:	'train_loss_reconstruction.pkl',
+		'train_loss_vae'						:	'train_loss_vae.pkl',
+		'train_loss_mse'						:	'train_loss_mse.pkl',
+		'train_loss_kld'						:	'train_loss_kld.pkl',
 		'valid_loss'							:	'valid_loss.pkl',
 		'train_accuracy'						:	'train_accuracy.pkl',
 		'valid_accuracy'						:	'valid_accuracy.pkl',
