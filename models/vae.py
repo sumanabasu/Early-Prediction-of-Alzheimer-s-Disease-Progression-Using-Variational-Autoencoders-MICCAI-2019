@@ -102,11 +102,6 @@ class VAE(nn.Module):
 				# nn.init.kaiming_normal(m.weight.data, mode='fan_in')
 				nn.init.constant(m.bias.data, 0.01)
 			
-			if isinstance(m, nn.ConvTranspose3d):
-				nn.init.kaiming_uniform(m.weight.data, mode='fan_in')
-				# nn.init.kaiming_normal(m.weight.data, mode='fan_in')
-				nn.init.constant(m.bias.data, 0.01)
-			
 			elif isinstance(m, nn.Linear):
 				nn.init.kaiming_uniform(m.weight.data, mode='fan_in')
 				# nn.init.kaiming_normal(m.weight.data, mode='fan_in')
@@ -190,7 +185,7 @@ class VAE(nn.Module):
 		
 		prob = self.logsoftmax(self.fc2(z))
 		
-		return prob
+		return prob, z
 	
 	# print(output.size())
 	
@@ -207,6 +202,6 @@ class VAE(nn.Module):
 		x_hat = self.decoder(z)
 		
 		# classifier
-		class_prob = self.classifier(z)
+		class_prob, classifier_embedding = self.classifier(z)
 		
-		return z, mu, logvar, x_hat, class_prob
+		return z, classifier_embedding, mu, logvar, x_hat, class_prob
