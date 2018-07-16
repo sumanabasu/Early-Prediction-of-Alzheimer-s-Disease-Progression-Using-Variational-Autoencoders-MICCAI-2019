@@ -38,7 +38,7 @@ class Trainer(object):
 		self.train_losses_class, self.train_losses_reconst, self.valid_losses, self.train_f1_Score, self.valid_f1_Score,\
 		self.train_accuracy, self.valid_accuracy = ([] for i in range(7))
 		
-		self.trainset_size, self.validset_size, testset_size = getIndicesTrainValidTest(requireslen=True)
+		self.trainset_size, self.validset_size, self.testset_size = getIndicesTrainValidTest(requireslen=True)
 		
 		#self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
 		
