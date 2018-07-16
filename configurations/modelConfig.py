@@ -80,6 +80,7 @@ params = {
 	},
 	
 	'train'	:	{
+		'model'				: 'CNN',
 		'timestamp'			: 'NextLabel',	#'CurrLabel'
 		'seed'				: 42,
 		'learning_rate' 	: 0.0001,
