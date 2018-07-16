@@ -1,15 +1,14 @@
 import numpy as np
 
-'''
 num_classes = 2
-name_classes = np.asarray(['NL', 'Diseased'])
-class_weight = [1, 1]
-'''
 
-num_classes = 3
-name_classes = np.asarray(['NL', 'MCI', 'AD'])
-class_weight = [1, 1, 1]
-
+if num_classes == 3:
+	name_classes = np.asarray(['NL', 'MCI', 'AD'])
+	class_weight = [1, 1, 1]
+else:
+	name_classes = np.asarray(['NL', 'Diseased'])
+	class_weight = [1, 1]
+	
 num_conv = 4
 img_shape = np.array([213, 197, 189])
 
@@ -81,7 +80,7 @@ params = {
 	},
 	
 	'train'	:	{
-		'timestamp'				: 'NextLabel',
+		'timestamp'			: 'NextLabel',	#'CurrLabel'
 		'seed'				: 42,
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
