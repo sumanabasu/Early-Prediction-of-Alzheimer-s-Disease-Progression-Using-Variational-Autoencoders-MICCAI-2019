@@ -9,7 +9,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from configurations.paths import paths, file_names
 import os
 import pickle
-from configurations.modelConfig import params
+from configurations.modelConfig import params, num_classes
 from random import shuffle
 from dataAugmentation import random_transform
 import torchvision.transforms as transforms
@@ -20,10 +20,15 @@ class HDF5loader():
 		self.img_f = f['Image4D']
 		self.trans = trans
 		self.train_indices = train_indices
+		if num_classes == 2:
+			self.label = [0 if x == 'NL' else 1 for x in f[params['train']['timestamp']]]
+		else:
+			self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f[params['train']['timestamp']]]
+			
 		#self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['NextLabel']]
-		self.label = [0 if x == 'NL' else 1 for x in f['CurrLabel']] #for current label	#for binary
-		# classification on current label
-		#self.label = [0 if x == 'NL' else 1 for x in f['NextLabel']]	#for binary classification on next label
+		# for binary classification
+		#self.label = [0 if x == 'NL' else 1 for x in f['CurrLabel']] #for current label
+		#self.label = [0 if x == 'NL' else 1 for x in f['NextLabel']]	#for next label
 		
 	def __getitem__(self, index):
 		img = self.img_f[index]

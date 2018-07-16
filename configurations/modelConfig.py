@@ -1,8 +1,14 @@
 import numpy as np
 
+'''
 num_classes = 2
 name_classes = np.asarray(['NL', 'Diseased'])
 class_weight = [1, 1]
+'''
+
+num_classes = 3
+name_classes = np.asarray(['NL', 'MCI', 'AD'])
+class_weight = [1, 1, 1]
 
 num_conv = 4
 img_shape = np.array([213, 197, 189])
@@ -51,10 +57,6 @@ layer_config = {
 	},
 	'fc2': {
 		'in': 4096,
-		'out': 1024
-	},
-	'fc3': {
-		'in': 1024,
 		'out': num_classes
 	},
 	
@@ -79,6 +81,7 @@ params = {
 	},
 	
 	'train'	:	{
+		'timestamp'				: 'NextLabel',
 		'seed'				: 42,
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,

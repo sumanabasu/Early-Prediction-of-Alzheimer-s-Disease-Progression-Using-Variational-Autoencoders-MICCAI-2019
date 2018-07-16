@@ -30,7 +30,7 @@ class CnnVanilla(nn.Module):
 		
 		self.fc1 = nn.Linear(layer_config['fc1']['in'] , layer_config['fc1']['out'])
 		self.fc2 = nn.Linear(layer_config['fc2']['in'], layer_config['fc2']['out'])
-		self.fc3 = nn.Linear(layer_config['fc3']['in'], layer_config['fc3']['out'])
+		#self.fc3 = nn.Linear(layer_config['fc3']['in'], layer_config['fc3']['out'])
 		
 		self.bn1 = nn.BatchNorm3d(layer_config['conv1']['out_channels'])
 		self.bn2 = nn.BatchNorm3d(layer_config['conv2']['out_channels'])
@@ -94,10 +94,9 @@ class CnnVanilla(nn.Module):
 		
 		# output = self.dropout(self.relu(self.fc2(fcc1)))
 		# print(fcc2.size())
-		fcc2 = self.dropout(self.relu(self.fc2(fcc1)))
-		fcc3 = self.fc3(fcc2)
+		fcc2 = self.fc2(fcc1)
 		
-		output = self.logsoftmax(fcc3)
+		output = self.logsoftmax(fcc2)
 		#print(output.size())
 		
-		return output, fcc2
+		return output, fcc1

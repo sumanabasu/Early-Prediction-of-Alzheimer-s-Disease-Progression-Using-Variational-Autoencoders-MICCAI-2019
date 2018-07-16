@@ -14,7 +14,7 @@ import numpy as np
 from scipy.misc import imsave
 from save import savePickle
 import torch
-from configurations.modelConfig import name_classes
+from configurations.modelConfig import num_classes, name_classes
 from sklearn.metrics import auc
 from sklearn import decomposition
 
@@ -106,7 +106,10 @@ def plotROC(cm, location, title):
 def plot_embedding(embedding, labels_actual, labels_predited, mode, location):
 
 	plt.clf()
-	colors = ['green', 'red']
+	if num_classes == 2:
+		colors = ['green', 'red']
+	else:
+		colors = ['green', 'red', 'blue']
 	
 	if mode == 'pca':
 		# PCA
@@ -145,7 +148,7 @@ def plot_embedding(embedding, labels_actual, labels_predited, mode, location):
 	cb = plt.colorbar()
 	loc = np.arange(0, max(labels_actual), max(labels_actual) / float(len(colors)))
 	cb.set_ticks(loc)
-	cb.set_ticklabels(['NL', 'Diseased'])
+	cb.set_ticklabels(list(name_classes))
 	cb.set_label('Disease Label')
 	plt.savefig(os.path.join(location, mode+'.png'))
 
