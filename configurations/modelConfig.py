@@ -41,6 +41,13 @@ layer_config = {
 		'stride': 1,
 		'padding': 1
 	},
+	'conv5': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
 	
 	'fc1': {
 		'in': 11 * int(np.prod(img_shape[:])), #14 * 13 * 12,
@@ -76,6 +83,14 @@ layer_config = {
 		#'output_padding' : 1	#(0, 0, 0)
 	},
 	'tconv4': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+		#'output_padding' : 1	#(0, 0, 0)
+	},
+	'tconv5': {
 		'in_channels': 11,
 		'out_channels': 1,
 		'kernel_size': 3,
