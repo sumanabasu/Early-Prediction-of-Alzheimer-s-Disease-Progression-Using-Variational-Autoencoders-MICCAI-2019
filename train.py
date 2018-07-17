@@ -30,16 +30,22 @@ class Trainer(object):
 		self.classification_criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
 		self.reconstruction_loss = nn.MSELoss()
 		
+		
 		self.curr_epoch = 0
 		self.batchstep = 0
 		
 		self.expt_folder = expt_folder
 		self.writer = SummaryWriter(log_dir=expt_folder)
 		
-		self.train_losses_class, self.train_losses_vae, self.train_mse, self.train_kld, self.valid_losses, \
-		self.train_f1_Score, self.valid_f1_Score, self.train_accuracy, self.valid_accuracy = ([] for i in range(9))
+		self.train_losses_class, self.train_losses_vae, self.train_mse, self.train_kld,\
+		self.valid_losses, self.valid_mse, self.valid_kld, \
+		self.train_f1_Score, self.valid_f1_Score, \
+		self.train_accuracy, self.valid_accuracy = ([] for i in range(11))
 		
 		self.trainset_size, self.validset_size, testset_size = getIndicesTrainValidTest(requireslen=True)
+	
+	def klDivergence(self, mu, logvar):
+		return (-0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()))
 		
 		#self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
 	def vae_loss(self, recon_x, x, mu, logvar):
@@ -47,7 +53,7 @@ class Trainer(object):
 		#MSE = nn.CrossEntropyLoss(recon_x, x, size_average=False)
 		# BCE = F.mse_loss(recon_x, x, size_average=False)
 		
-		KLD = (-0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()))
+		KLD = self.klDivergence(mu, logvar)
 		
 		return MSE + KLD, MSE, KLD
 	
@@ -190,7 +196,7 @@ class Trainer(object):
 		
 		for i, (images, labels) in enumerate(self.valid_loader):
 			img = Variable(images, volatile=True).cuda()
-			_, _, _, _, _, p_hat = self.model(img)
+			_, _, mu, logvar, x_hat, p_hat = self.model(img)
 			_, predicted = torch.max(p_hat.data, 1)
 			labels = labels.view(-1, )
 			correct += ((predicted.cpu() == labels).float().sum())
@@ -199,8 +205,10 @@ class Trainer(object):
 			
 			loss = self.classification_criterion(p_hat, Variable(labels).cuda())
 			self.valid_losses.append(loss.data[0])
+			self.valid_mse.append(self.reconstruction_loss(x_hat, img))
+			self.valid_kld.append(self.klDivergence(mu, logvar))
 			
-			del img, _, p_hat
+			del img, x_hat, p_hat, _, predicted, mu, logvar
 			pb.update(1)
 			
 		pb.close()
@@ -213,7 +221,9 @@ class Trainer(object):
 		
 		# Plot loss and accuracy
 		self.writer.add_scalar('validation_accuracy', correct, self.curr_epoch)
-		self.writer.add_scalar('validation_loss', np.mean(self.valid_losses), self.curr_epoch)
+		self.writer.add_scalar('validation_loss', self.valid_losses[-1] * 1.0 / self.validset_size, self.curr_epoch)
+		self.writer.add_scalar('validation_mse', self.valid_mse[-1] * 1.0 / self.validset_size, self.curr_epoch)
+		self.writer.add_scalar('validation KLD', self.valid_kld[-1] * 1.0 / self.validset_size, self.curr_epoch)
 		
 		# Plot confusion matrices
 		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
