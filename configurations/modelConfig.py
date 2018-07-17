@@ -1,8 +1,13 @@
 import numpy as np
 
-num_classes = 2
-name_classes = np.asarray(['NL', 'Diseased'])
-class_weight = [1, 1]
+num_classes = 3
+
+if num_classes == 3:
+	name_classes = np.asarray(['NL', 'MCI', 'AD'])
+	class_weight = [1, 1, 1]
+else:
+	name_classes = np.asarray(['NL', 'Diseased'])
+	class_weight = [1, 1]
 
 num_conv = 4
 img_shape = np.array([213, 197, 189])
@@ -35,13 +40,6 @@ layer_config = {
 		'padding': 1
 	},
 	'conv4': {
-		'in_channels': 11,
-		'out_channels': 11,
-		'kernel_size': 3,
-		'stride': 1,
-		'padding': 1
-	},
-	'conv5': {
 		'in_channels': 11,
 		'out_channels': 11,
 		'kernel_size': 3,
@@ -84,14 +82,6 @@ layer_config = {
 	},
 	'tconv4': {
 		'in_channels': 11,
-		'out_channels': 11,
-		'kernel_size': 3,
-		'stride': 1,
-		'padding': 1
-		#'output_padding' : 1	#(0, 0, 0)
-	},
-	'tconv5': {
-		'in_channels': 11,
 		'out_channels': 1,
 		'kernel_size': 3,
 		'stride': 1,
@@ -116,6 +106,8 @@ params = {
 	},
 	
 	'train'	:	{
+		'model'				: 'AutoEncoder',
+		'timestamp'			: 'NextLabel',	#'CurrLabel'
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
 		'batch_size' 		: 4,
@@ -135,3 +127,23 @@ data_aug = {
 	## 'crop_size': (100, 100),
 	#'channel_shift_range': 5.
 }
+
+'''
+'conv5': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	
+'tconv5': {
+		'in_channels': 11,
+		'out_channels': 1,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+		#'output_padding' : 1	#(0, 0, 0)
+	},
+	
+	'''

@@ -39,11 +39,12 @@ class AutoEncoder(nn.Module):
 							   out_channels=layer_config['conv4']['out_channels'],
 							   kernel_size=layer_config['conv4']['kernel_size'], stride=layer_config['conv4']['stride'],
 							   padding=layer_config['conv4']['padding'])
-		
+		'''
 		self.conv5 = nn.Conv3d(in_channels=layer_config['conv5']['in_channels'],
 							   out_channels=layer_config['conv5']['out_channels'],
 							   kernel_size=layer_config['conv5']['kernel_size'], stride=layer_config['conv5']['stride'],
 							   padding=layer_config['conv5']['padding'])
+		'''
 		
 		
 		self.tconv1 = nn.Conv3d(in_channels=layer_config['tconv1']['in_channels'],
@@ -66,11 +67,13 @@ class AutoEncoder(nn.Module):
 										 kernel_size=layer_config['tconv4']['kernel_size'],
 										 stride=layer_config['tconv4']['stride'],
 										 padding=layer_config['tconv4']['padding'])
+		'''
 		self.tconv5 = nn.Conv3d(in_channels=layer_config['tconv5']['in_channels'],
 								out_channels=layer_config['tconv5']['out_channels'],
 								kernel_size=layer_config['tconv5']['kernel_size'],
 								stride=layer_config['tconv5']['stride'],
 								padding=layer_config['tconv5']['padding'])
+		'''
 
 		self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
 	
@@ -82,13 +85,13 @@ class AutoEncoder(nn.Module):
 		self.bn2 = nn.BatchNorm3d(layer_config['conv2']['out_channels'])
 		self.bn3 = nn.BatchNorm3d(layer_config['conv3']['out_channels'])
 		self.bn4 = nn.BatchNorm3d(layer_config['conv4']['out_channels'])
-		self.bn5 = nn.BatchNorm3d(layer_config['conv5']['out_channels'])
+		#self.bn5 = nn.BatchNorm3d(layer_config['conv5']['out_channels'])
 		
 		self.tbn1 = nn.BatchNorm3d(layer_config['tconv1']['out_channels'])
 		self.tbn2 = nn.BatchNorm3d(layer_config['tconv2']['out_channels'])
 		self.tbn3 = nn.BatchNorm3d(layer_config['tconv3']['out_channels'])
 		self.tbn4 = nn.BatchNorm3d(layer_config['tconv4']['out_channels'])
-		self.tbn5 = nn.BatchNorm3d(layer_config['tconv5']['out_channels'])
+		#elf.tbn5 = nn.BatchNorm3d(layer_config['tconv5']['out_channels'])
 		
 		self.dropout3d = nn.Dropout3d(p=params['model']['conv_drop_prob'])
 		self.dropout = nn.Dropout(params['model']['fcc_drop_prob'])
@@ -138,17 +141,17 @@ class AutoEncoder(nn.Module):
 		# print(x.size())
 		
 		classifier_x = self.dropout3d(self.relu(self.bn4(self.maxpool(self.conv4(x)))))
-		self.shapes.append(classifier_x.size()[-3:])
+		#self.shapes.append(classifier_x.size()[-3:])
 		# print(x.size())
 		#print('encoder : ', self.shapes)
 		#print(x.size())
 		
-		encoder_x = self.dropout3d(self.relu(self.bn5(self.maxpool(self.conv5(classifier_x)))))
+		#encoder_x = self.dropout3d(self.relu(self.bn5(self.maxpool(self.conv5(classifier_x)))))
 		#print(encoder_x.size())
 		
 		#print(self.shapes)
 		
-		return classifier_x, encoder_x
+		return classifier_x	#, encoder_x
 	
 	def decoder(self, x):
 		#print('decoder : ', x.size())
@@ -173,10 +176,12 @@ class AutoEncoder(nn.Module):
 		self.shapes.pop()
 		#print(x.size())
 		
+		'''
 		x = self.dropout3d(self.relu(self.tbn5(self.tconv5(self.upsample(x)))))
 		x = crop(x, self.shapes[-1])
 		#print(x.size())
 		self.shapes.pop()
+		'''
 		
 		return x
 	
@@ -195,12 +200,12 @@ class AutoEncoder(nn.Module):
 	
 	def forward(self, x):
 		# encoder
-		cls_x, enc_x = self.encoder(x)
+		enc_x = self.encoder(x)
 		
 		# decoder
 		x_hat = self.decoder(enc_x)
 		
 		# classifier
-		class_prob, classifier_embedding = self.classifier(cls_x)
+		class_prob, classifier_embedding = self.classifier(enc_x)
 		
 		return x_hat, class_prob, enc_x, classifier_embedding
