@@ -112,32 +112,33 @@ class VAE(nn.Module):
 				nn.init.constant(m.bias.data, 0.01)
 				
 	def encoder(self, x):
+		
 		# print('encoder : ', x.size())
 		self.shapes.append(x.size()[-3:])
 		
-		x = self.dropout3d(self.relu(self.bn1(self.maxpool(self.conv1(x)))))
+		x = (self.relu(self.bn1(self.maxpool(self.conv1(x)))))
 		self.shapes.append(x.size()[-3:])
-		#print(x.size())
+		# print(x.size())
 		
-		x = self.dropout3d(self.relu(self.bn2(self.maxpool(self.conv2(x)))))
+		x = (self.relu(self.bn2(self.maxpool(self.conv2(x)))))
 		self.shapes.append(x.size()[-3:])
-		#print(x.size())
+		# print(x.size())
 		
-		x = self.dropout3d(self.relu(self.bn3(self.maxpool(self.conv3(x)))))
+		x = (self.relu(self.bn3(self.maxpool(self.conv3(x)))))
 		self.shapes.append(x.size()[-3:])
-		#print(x.size())
+		# print(x.size())
 		
-		x = self.dropout3d(self.relu(self.bn4(self.maxpool(self.conv4(x)))))
-		#self.shapes.append(x.size()[-3:])
-		#print('encoder : ', self.shapes)
-		#print(x.size())
+		x = (self.relu(self.bn4(self.maxpool(self.conv4(x)))))
+		# self.shapes.append(x.size()[-3:])
+		# print('encoder : ', self.shapes)
+		# print(x.size())
 		
 		# flatten
 		h = x.view(x.size(0), -1)
 		#print(h.size())
 		
-		mu = self.dropout(self.relu(self.fc_mean(h)))
-		logvar = self.dropout(self.relu(self.fc_logvar(h)))
+		mu = self.fc_mean(h)
+		logvar = self.fc_logvar(h)
 		
 		return mu, logvar
 	
@@ -149,27 +150,27 @@ class VAE(nn.Module):
 	
 	def decoder(self, z):
 		#print('decoder : ', x.size())
-		x_hat = self.dropout(self.relu(self.lineard(z)))
+		x_hat = (self.relu(self.lineard(z)))
 		#print(x_hat.size())
 		x_hat = x_hat.view(x_hat.size(0), -1, int(img_shape[0]), int(img_shape[1]), int(img_shape[2]))
 		#print(x_hat.size())
 		
-		x_hat = self.dropout3d(self.relu(self.tbn1(self.tconv1(self.upsample(x_hat)))))
+		x_hat = (self.relu(self.tbn1(self.tconv1(self.upsample(x_hat)))))
 		x_hat = crop(x_hat, self.shapes[-1])
 		self.shapes.pop()
 		#print(x_hat.size())
 		
-		x_hat = self.dropout3d(self.relu(self.tbn2(self.tconv2(self.upsample(x_hat)))))
+		x_hat = (self.relu(self.tbn2(self.tconv2(self.upsample(x_hat)))))
 		x_hat = crop(x_hat, self.shapes[-1])
 		self.shapes.pop()
 		#print(x_hat.size())
 		
-		x_hat = self.dropout3d(self.relu(self.tbn3(self.tconv3(self.upsample(x_hat)))))
+		x_hat = (self.relu(self.tbn3(self.tconv3(self.upsample(x_hat)))))
 		x_hat = crop(x_hat, self.shapes[-1])
 		self.shapes.pop()
 		#print(x_hat.size())
 		
-		x_hat = self.dropout3d(self.relu(self.tbn4(self.tconv4(self.upsample(x_hat)))))
+		x_hat = (self.relu(self.tbn4(self.tconv4(self.upsample(x_hat)))))
 		x_hat = crop(x_hat, self.shapes[-1])
 		self.shapes.pop()
 		#print(x_hat.size())
@@ -180,7 +181,7 @@ class VAE(nn.Module):
 		
 		# print(x.size())
 		
-		z = self.dropout(self.relu(self.fc1(z)))
+		z = (self.relu(self.fc1(z)))
 		# print(x.size())
 		
 		prob = self.logsoftmax(self.fc2(z))
