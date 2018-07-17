@@ -1,6 +1,6 @@
 import numpy as np
 
-num_classes = 3
+num_classes = 2
 
 if num_classes == 3:
 	name_classes = np.asarray(['NL', 'MCI', 'AD'])
@@ -54,6 +54,10 @@ layer_config = {
 	'fc2': {
 		'in': 4096,
 		'out': num_classes
+	},
+	'fc_dec' : {
+		'in'	: 4096,
+		'out'	: 11 * int(np.prod(img_shape[:]))
 	},
 	
 	'tconv1': {

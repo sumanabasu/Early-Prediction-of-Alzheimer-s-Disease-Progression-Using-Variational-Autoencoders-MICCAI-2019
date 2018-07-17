@@ -2,7 +2,7 @@
 Convolutional Neural Network with reconstrcution loss of euto-encoder as regularization
 '''
 import torch.nn as nn
-from configurations.modelConfig import layer_config, params, num_classes
+from configurations.modelConfig import layer_config, params, num_classes, img_shape
 
 
 def crop(layer, target_size):
@@ -79,6 +79,7 @@ class AutoEncoder(nn.Module):
 	
 		self.fc1 = nn.Linear(layer_config['fc1']['in'], layer_config['fc1']['out'])
 		self.fc2 = nn.Linear(layer_config['fc2']['in'], layer_config['fc2']['out'])
+		self.fc_dec = nn.Linear(layer_config['fc_dec']['in'], layer_config['fc_dec']['out'])
 		# self.fc3 = nn.Linear(layer_config['fc3']['in'], layer_config['fc3']['out'])
 		
 		self.bn1 = nn.BatchNorm3d(layer_config['conv1']['out_channels'])
@@ -140,7 +141,7 @@ class AutoEncoder(nn.Module):
 		self.shapes.append(x.size()[-3:])
 		# print(x.size())
 		
-		classifier_x = self.dropout3d(self.relu(self.bn4(self.maxpool(self.conv4(x)))))
+		x = self.dropout3d(self.relu(self.bn4(self.maxpool(self.conv4(x)))))
 		#self.shapes.append(classifier_x.size()[-3:])
 		# print(x.size())
 		#print('encoder : ', self.shapes)
@@ -150,11 +151,17 @@ class AutoEncoder(nn.Module):
 		#print(encoder_x.size())
 		
 		#print(self.shapes)
+		x = x.view(x.size(0), -1)
+		x = self.dropout(self.relu(self.fc1(x)))
 		
-		return classifier_x	#, encoder_x
+		return x	#, encoder_x
 	
 	def decoder(self, x):
 		#print('decoder : ', x.size())
+		
+		x = self.dropout(self.relu(self.fc_dec(x)))
+		x = x.view(x.size(0), 11, int(img_shape[0]), int(img_shape[1]), int(img_shape[2]))
+		#print(x.size())
 		
 		x = self.dropout3d(self.relu(self.tbn1(self.tconv1(self.upsample(x)))))
 		x = crop(x, self.shapes[-1])
@@ -186,10 +193,10 @@ class AutoEncoder(nn.Module):
 		return x
 	
 	def classifier(self, x):
-		x = x.view(x.size(0), -1)
+		#x = x.view(x.size(0), -1)
 		# print(x.size())
 		
-		x = self.dropout(self.relu(self.fc1(x)))
+		#x = self.dropout(self.relu(self.fc1(x)))
 		# print(x.size())
 		
 		out = self.logsoftmax(self.fc2(x))
