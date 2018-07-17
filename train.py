@@ -42,7 +42,7 @@ class Trainer(object):
 		self.train_f1_Score, self.valid_f1_Score, \
 		self.train_accuracy, self.valid_accuracy = ([] for i in range(11))
 		
-		self.trainset_size, self.validset_size, testset_size = getIndicesTrainValidTest(requireslen=True)
+		self.trainset_size, self.validset_size, self.testset_size = getIndicesTrainValidTest(requireslen=True)
 	
 	def klDivergence(self, mu, logvar):
 		return (-0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()))
