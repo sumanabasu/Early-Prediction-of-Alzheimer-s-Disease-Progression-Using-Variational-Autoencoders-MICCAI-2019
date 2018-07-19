@@ -45,6 +45,9 @@ class Trainer(object):
 		self.trainset_size, self.validset_size, self.testset_size = getIndicesTrainValidTest(requireslen=True)
 	
 	def klDivergence(self, mu, logvar):
+		# D_KL(Q(z|X) || P(z|X))
+		# P(z|X) is the real distribution, Q(z|X) is the distribution we are trying to approximate P(z|X) with
+		# calculate in closed form
 		return (-0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()))
 		
 		#self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
@@ -190,7 +193,10 @@ class Trainer(object):
 	def validate(self):
 		self.model.eval()
 		correct = 0
+		mse = 0
+		kld = 0
 		cm = np.zeros((num_classes, num_classes), int)
+		loss = 0
 		
 		pb = tqdm(total=len(self.valid_loader))
 		
@@ -203,10 +209,9 @@ class Trainer(object):
 			
 			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())
 			
-			loss = self.classification_criterion(p_hat, Variable(labels).cuda())
-			self.valid_losses.append(loss.data[0])
-			self.valid_mse.append(self.reconstruction_loss(x_hat, img))
-			self.valid_kld.append(self.klDivergence(mu, logvar))
+			loss += self.classification_criterion(p_hat, Variable(labels).cuda()).data
+			mse += self.reconstruction_loss(x_hat, img).data
+			kld += self.klDivergence(mu, logvar).data
 			
 			del img, x_hat, p_hat, _, predicted, mu, logvar
 			pb.update(1)
@@ -214,16 +219,24 @@ class Trainer(object):
 		pb.close()
 		
 		correct /= self.validset_size
+		mse /= self.validset_size
+		kld /= self.validset_size
+		loss /= self.validset_size
 		
 		print('Validation Accuracy : %0.6f' % correct)
 		
 		self.valid_accuracy.append(correct)
+		self.valid_mse.append(mse)
+		self.valid_kld.append(kld)
+		self.valid_losses.append(loss)
 		
 		# Plot loss and accuracy
 		self.writer.add_scalar('validation_accuracy', correct, self.curr_epoch)
-		self.writer.add_scalar('validation_loss', self.valid_losses[-1] * 1.0 / self.validset_size, self.curr_epoch)
-		self.writer.add_scalar('validation_mse', self.valid_mse[-1] * 1.0 / self.validset_size, self.curr_epoch)
-		self.writer.add_scalar('validation KLD', self.valid_kld[-1] * 1.0 / self.validset_size, self.curr_epoch)
+		self.writer.add_scalar('validation_loss', loss * 1.0 / self.validset_size, self.curr_epoch)
+		self.writer.add_scalar('validation_mse', mse , self.curr_epoch)
+		self.writer.add_scalar('validation KLD', kld , self.curr_epoch)
+		#print('MSE : ', mse)
+		#print('KLD : ', kld)
 		
 		# Plot confusion matrices
 		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
