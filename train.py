@@ -95,8 +95,8 @@ class Trainer(object):
 		
 		pbt.close()
 		
-		minibatch_losses_class /= self.trainset_size
-		minibatch_losses_reconst /= self.trainset_size
+		minibatch_losses_class /= self.trainset_size #len(self.train_loader)
+		minibatch_losses_reconst /= self.trainset_size #len(self.train_loader)
 		minibatch_accuracy /= self.trainset_size
 		
 		# Plot losses
@@ -168,6 +168,7 @@ class Trainer(object):
 		self.model.eval()
 		correct = 0
 		cm = np.zeros((num_classes, num_classes), int)
+		loss = 0
 		
 		pb = tqdm(total=len(self.valid_loader))
 		
@@ -180,8 +181,7 @@ class Trainer(object):
 			
 			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())
 			
-			loss = self.classification_criterion(outputs, Variable(labels).cuda())
-			self.valid_losses.append(loss.data[0])
+			loss += self.classification_criterion(outputs, Variable(labels).cuda()).data
 			
 			del img
 			pb.update(1)
@@ -189,14 +189,16 @@ class Trainer(object):
 		pb.close()
 		
 		correct /= self.validset_size
+		loss /= self.validset_size #len(self.valid_loader)
 		
 		print('Validation Accuracy : %0.6f' % correct)
 		
 		self.valid_accuracy.append(correct)
+		self.valid_losses.append(loss)
 		
 		# Plot loss and accuracy
 		self.writer.add_scalar('validation_accuracy', correct, self.curr_epoch)
-		self.writer.add_scalar('validation_loss', np.mean(self.valid_losses), self.curr_epoch)
+		self.writer.add_scalar('validation_loss', loss, self.curr_epoch)
 		
 		# Plot confusion matrices
 		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
@@ -224,7 +226,7 @@ class Trainer(object):
 		pred_labels = []
 		act_labels = []
 		
-		pb = tqdm(total=len(self.valid_loader))
+		pb = tqdm(total=len(test_loader))
 		
 		for i, (images, labels) in enumerate(test_loader):
 			img = Variable(images, volatile=True).cuda()
@@ -244,7 +246,7 @@ class Trainer(object):
 		pb.close()
 		
 		correct /= self.testset_size
-		test_losses /= self.testset_size
+		test_losses /= self.trainset_size #len(test_loader)
 		
 		print('Test Accuracy : %0.6f' % correct)
 		print('Test Losses : %0.6f' % test_losses)

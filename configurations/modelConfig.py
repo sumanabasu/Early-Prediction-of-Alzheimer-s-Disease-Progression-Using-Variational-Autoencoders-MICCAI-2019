@@ -55,8 +55,14 @@ layer_config = {
 		'in': 4096,
 		'out': num_classes
 	},
+	
+	'fc_enc' : {
+		'in'	: 11 * int(np.prod(img_shape[:])),
+		'out'	: 128
+	},
+	
 	'fc_dec' : {
-		'in'	: 4096,
+		'in'	: 128,
 		'out'	: 11 * int(np.prod(img_shape[:]))
 	},
 	
