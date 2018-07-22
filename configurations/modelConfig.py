@@ -58,11 +58,11 @@ layer_config = {
 	
 	'fc_enc' : {
 		'in'	: 11 * int(np.prod(img_shape[:])),
-		'out'	: 128
+		'out'	: 512
 	},
 	
 	'fc_dec' : {
-		'in'	: 128,
+		'in'	: 512,
 		'out'	: 11 * int(np.prod(img_shape[:]))
 	},
 	
