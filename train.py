@@ -242,6 +242,11 @@ class Trainer(object):
 			
 			del img
 			pb.update(1)
+			
+			encoder_embedding.extend(np.array(enc_emb.data.cpu().numpy()))
+			classifier_embedding.extend(np.array(cls_emb.cpu().numpy()))
+			pred_labels.extend(np.array(predicted.cpu().numpy()))
+			act_labels.extend(np.array(labels.numpy()))
 		
 		pb.close()
 		
