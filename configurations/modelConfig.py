@@ -1,9 +1,15 @@
 import numpy as np
 
 num_classes = 2
-name_classes = np.asarray(['NL', 'Diseased'])
-class_weight = [1, 1]
-latent_dim = 1024
+
+if num_classes == 3:
+	name_classes = np.asarray(['NL', 'MCI', 'AD'])
+	class_weight = [1, 1, 1]
+else:
+	name_classes = np.asarray(['NL', 'Diseased'])
+	class_weight = [1, 1]
+	
+latent_dim = 4096
 
 num_conv = 4
 img_shape = np.array([213, 197, 189])
@@ -47,10 +53,10 @@ layer_config = {
 	
 	'fc1': {
 		'in': latent_dim , #14 * 13 * 12,
-		'out': 1024
+		'out': 4096
 	},
 	'fc2': {
-		'in': 1024,
+		'in': 4096,
 		'out': num_classes
 	},
 	
@@ -104,6 +110,9 @@ params = {
 	},
 	
 	'train'	:	{
+		'model'				: 'VAE',
+		'timestamp'			: 'NextLabel',	#'CurrLabel'
+		'seed'				: 42,
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
 		'batch_size' 		: 2,
