@@ -21,11 +21,11 @@ def crop(layer, target_size):
 	return layer
 
 
-class VAE(nn.Module):
+class CVAE(nn.Module):
 	"""Cnn with simple architecture of 6 stacked convolution layers followed by a fully connected layer"""
 	
 	def __init__(self):
-		super(VAE, self).__init__()
+		super(CVAE, self).__init__()
 		self.conv1 = nn.Conv3d(in_channels=layer_config['conv1']['in_channels'],
 							   out_channels=layer_config['conv1']['out_channels'],
 							   kernel_size=layer_config['conv1']['kernel_size'], stride=layer_config['conv1']['stride'],
@@ -65,9 +65,9 @@ class VAE(nn.Module):
 										 stride=layer_config['tconv4']['stride'],
 										 padding=layer_config['tconv4']['padding'])
 		
-		self.fc_mean = nn.Linear(layer_config['gaussian'], layer_config['z_dim'])
-		self.fc_logvar = nn.Linear(layer_config['gaussian'], layer_config['z_dim'])
-		self.lineard = nn.Linear(layer_config['z_dim'], layer_config['gaussian'])
+		#self.fc_mean = nn.Linear(layer_config['gaussian'], layer_config['z_dim'])
+		#self.fc_logvar = nn.Linear(layer_config['gaussian'], layer_config['z_dim'])
+		self.lineard = nn.Linear(layer_config['gaussian'], layer_config['gaussian'])
 
 		self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
 	
@@ -133,12 +133,13 @@ class VAE(nn.Module):
 		# print('encoder : ', self.shapes)
 		# print(x.size())
 		
-		# flatten
-		h = x.view(x.size(0), -1)
-		#print(h.size())
+		# split
+		x = torch.split(x, split_size=11, dim=1)
 		
-		mu = self.fc_mean(h)
-		logvar = self.fc_logvar(h)
+		# flatten
+		mu = x[0].contiguous().view(x[0].size(0), -1)
+		logvar = x[1].contiguous().view(x[1].size(0), -1)
+		#print(mu.size(), logvar.size())
 		
 		return mu, logvar
 	
@@ -149,10 +150,8 @@ class VAE(nn.Module):
 		return z
 	
 	def decoder(self, z):
-		#print('decoder : ', x.size())
-		x_hat = (self.relu(self.lineard(z)))
-		#print(x_hat.size())
-		x_hat = x_hat.view(x_hat.size(0), -1, int(img_shape[0]), int(img_shape[1]), int(img_shape[2]))
+		#print('decoder : ', z.size())
+		x_hat = z.view(z.size(0), -1, int(img_shape[0]), int(img_shape[1]), int(img_shape[2]))
 		#print(x_hat.size())
 		
 		x_hat = (self.relu(self.tbn1(self.tconv1(self.upsample(x_hat)))))

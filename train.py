@@ -28,8 +28,7 @@ class Trainer(object):
 		self.optimizer = torch.optim.Adam(model.parameters(),
 										  lr=params['train']['learning_rate'])
 		self.classification_criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
-		self.reconstruction_loss = nn.MSELoss()
-		
+		self.reconstruction_loss = nn.CrossEntropyLoss()
 		
 		self.curr_epoch = 0
 		self.batchstep = 0
@@ -52,13 +51,13 @@ class Trainer(object):
 		
 		#self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
 	def vae_loss(self, recon_x, x, mu, logvar):
-		MSE = self.reconstruction_loss(recon_x, x)
+		CE = self.reconstruction_loss(recon_x, x)
 		#MSE = nn.CrossEntropyLoss(recon_x, x, size_average=False)
 		# BCE = F.mse_loss(recon_x, x, size_average=False)
 		
 		KLD = self.klDivergence(mu, logvar)
 		
-		return MSE + KLD, MSE, KLD
+		return CE + KLD, CE, KLD
 	
 	def train(self):
 		scheduler = MultiStepLR(self.optimizer, milestones=params['train']['lr_schedule'], gamma=0.1)	# [40,
@@ -308,14 +307,15 @@ class Trainer(object):
 		act_labels = np.array(act_labels)
 		
 		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
-					   title='encoder_embedding_valid')
+					   title='encoder_embedding_test')
 		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
-					   title='encoder_embedding_valid')
+					   title='encoder_embedding_test')
+		
 		
 		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
-					   title='classifier_embedding_valid')
+					   title='classifier_embedding_test')
 		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
-					   title='classifier_embedding_valid')
+					   title='classifier_embedding_test')
 		
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
