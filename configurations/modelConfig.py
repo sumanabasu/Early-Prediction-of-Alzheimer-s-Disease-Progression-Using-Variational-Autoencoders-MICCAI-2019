@@ -43,16 +43,16 @@ layer_config = {
 	},
 	'conv4': {
 		'in_channels': 11,
-		'out_channels': 11,
+		'out_channels': 11 * 2,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
 	},
 	'gaussian'	: 11 * int(np.prod(img_shape[:])), #14 * 13 * 12,,
-	'z_dim'	:	latent_dim,
+	#'z_dim'	:	latent_dim,
 	
 	'fc1': {
-		'in': latent_dim , #14 * 13 * 12,
+		'in': 11 * int(np.prod(img_shape[:])) , #14 * 13 * 12,
 		'out': 4096
 	},
 	'fc2': {
