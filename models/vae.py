@@ -153,7 +153,7 @@ class VAE(nn.Module):
 		#print('decoder : ', x.size())
 		#x_hat = (self.relu(self.lineard(z)))
 		#print(x_hat.size())
-		x_hat = z.view(z.size(0), -1, int(img_shape[0]), int(img_shape[1]), int(img_shape[2]))
+		x_hat = z.contiguous().view(z.size(0), -1, int(img_shape[0]), int(img_shape[1]), int(img_shape[2]))
 		#print(x_hat.size())
 		
 		x_hat = (self.relu(self.tbn1(self.tconv1(self.upsample(x_hat)))))
