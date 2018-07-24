@@ -139,7 +139,9 @@ class VAE(nn.Module):
 		# flatten
 		mu = x[0].contiguous().view(x[0].size(0), -1)
 		logvar = x[1].contiguous().view(x[1].size(0), -1)
-		# print(mu.size(), logvar.size())
+		
+		print(x[0].size(), mu.size())
+		print(x[1].size, logvar.size())
 		
 		return mu, logvar
 	
