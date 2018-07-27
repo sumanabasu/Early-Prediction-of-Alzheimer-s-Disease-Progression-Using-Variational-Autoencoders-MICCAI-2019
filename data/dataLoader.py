@@ -73,7 +73,7 @@ class HDF5loader():
 
 
 def dataLoader(hdf5_file, trans):
-	num_workers = 1
+	num_workers = 0
 	pin_memory = False
 	
 	'''

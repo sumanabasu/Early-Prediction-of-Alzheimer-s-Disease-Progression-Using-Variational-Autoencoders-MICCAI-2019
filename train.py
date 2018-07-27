@@ -27,7 +27,6 @@ class Trainer(object):
 		self.valid_loader = valid_loader
 		self.optimizer = torch.optim.Adam(model.parameters(),
 										  lr=params['train']['learning_rate'])
-		self.classification_criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
 		self.reconstruction_loss = nn.CrossEntropyLoss()
 		
 		self.curr_epoch = 0
@@ -36,22 +35,23 @@ class Trainer(object):
 		self.expt_folder = expt_folder
 		self.writer = SummaryWriter(log_dir=expt_folder)
 		
-		self.train_losses_class, self.train_losses_vae, self.train_mse, self.train_kld,\
-		self.valid_losses, self.valid_mse, self.valid_kld, \
+		self.train_losses_vae, self.train_ce, self.train_kld,\
+		self.valid_losses, self.valid_ce, self.valid_kld, \
 		self.train_f1_Score, self.valid_f1_Score, \
-		self.train_accuracy, self.valid_accuracy = ([] for i in range(11))
+		self.train_accuracy, self.valid_accuracy = ([] for i in range(10))
 		
 		self.trainset_size, self.validset_size, self.testset_size = getIndicesTrainValidTest(requireslen=True)
 	
 	def klDivergence(self, mu, logvar):
+		# TODO : update KL Divergence between posterior distribution and prior distribution
 		# D_KL(Q(z|X) || P(z|X))
 		# P(z|X) is the real distribution, Q(z|X) is the distribution we are trying to approximate P(z|X) with
 		# calculate in closed form
 		return (-0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()))
 		
 		#self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
-	def vae_loss(self, recon_x, x, mu, logvar):
-		CE = self.reconstruction_loss(recon_x, x)
+	def vae_loss(self, recon_y, y, mu, logvar):
+		CE = self.reconstruction_loss(recon_y, y)
 		#MSE = nn.CrossEntropyLoss(recon_x, x, size_average=False)
 		# BCE = F.mse_loss(recon_x, x, size_average=False)
 		
@@ -68,11 +68,10 @@ class Trainer(object):
 			scheduler.step()
 			
 			# Train Model
-			accuracy, classification_loss, vae_loss, mse, kld, f1_score = self.trainEpoch()
+			accuracy, vae_loss, ce, kld, f1_score = self.trainEpoch()
 			
-			self.train_losses_class.append(classification_loss)
 			self.train_losses_vae.append(vae_loss)
-			self.train_mse.append(mse)
+			self.train_ce.append(ce)
 			self.train_kld.append(kld)
 			self.train_accuracy.append(accuracy)
 			self.train_f1_Score.append(f1_score)
@@ -95,21 +94,19 @@ class Trainer(object):
 		
 		cm = np.zeros((num_classes, num_classes), int)
 		
-		minibatch_losses_class = 0
 		minibatch_losses_vae = 0
 		minibatch_accuracy = 0
 		minibatch_kld = 0
-		minibatch_mse = 0
+		minibatch_ce = 0
 		
 		for batch_idx, (images, labels) in enumerate(self.train_loader):
 			
 			torch.cuda.empty_cache()
-			accuracy, class_loss, conf_mat, vae_loss, kld, mse = self.trainBatch(batch_idx, images, labels)
+			accuracy, conf_mat, vae_loss, kld, ce = self.trainBatch(batch_idx, images, labels)
 			
-			minibatch_losses_class += class_loss
 			minibatch_losses_vae += vae_loss
 			minibatch_kld += kld
-			minibatch_mse += mse
+			minibatch_ce += ce
 			minibatch_accuracy += accuracy
 			cm += conf_mat
 			
@@ -117,16 +114,14 @@ class Trainer(object):
 		
 		pbt.close()
 		
-		minibatch_losses_class /= self.trainset_size
 		minibatch_losses_vae /= self.trainset_size
-		minibatch_mse /= self.trainset_size
+		minibatch_ce /= self.trainset_size
 		minibatch_kld /= self.trainset_size
 		minibatch_accuracy /= self.trainset_size
 		
 		# Plot losses
-		self.writer.add_scalar('train_classification_loss', minibatch_losses_class , self.curr_epoch)
 		self.writer.add_scalar('train_vae_loss', minibatch_losses_vae, self.curr_epoch)
-		self.writer.add_scalar('train_reconstruction_loss', minibatch_mse, self.curr_epoch)
+		self.writer.add_scalar('train_reconstruction_loss', minibatch_ce, self.curr_epoch)
 		self.writer.add_scalar('train_KL_divergence', minibatch_kld, self.curr_epoch)
 		self.writer.add_scalar('train_accuracy', minibatch_accuracy, self.curr_epoch)
 		
@@ -142,7 +137,7 @@ class Trainer(object):
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Train)')
 		
-		return minibatch_accuracy, minibatch_losses_class, minibatch_losses_vae, minibatch_mse, minibatch_kld, f1_score
+		return minibatch_accuracy, minibatch_losses_vae, minibatch_ce, minibatch_kld, f1_score
 	
 	def trainBatch(self, batch_idx, images, labels):
 		images = Variable(images).cuda()
@@ -151,12 +146,9 @@ class Trainer(object):
 		
 		# Forward + Backward + Optimize
 		
-		# x_hat is reconstructed image, p_hat is predicted classification probability
-		_, _, mu, logvar, x_hat, p_hat = self.model(images)
-		classification_loss = self.classification_criterion(p_hat, labels)
-		vae_loss, mse, kld = self.vae_loss(x_hat, images, mu, logvar)
-		
-		loss = classification_loss + params['train']['lambda'] * vae_loss
+		# y_hat is generated label
+		pred_labels, mu, logvar = self.model(images, labels)
+		loss, ce, kld = self.vae_loss(pred_labels, labels, mu, logvar)
 		
 		self.optimizer.zero_grad()
 		#classification_loss.backward(retain_graph=True)
@@ -166,28 +158,25 @@ class Trainer(object):
 		self.optimizer.step()
 		
 		# Compute accuracy
-		_, pred_labels = torch.max(p_hat, 1)
 		accuracy = (labels == pred_labels).float().sum()
 		
 		# Print metrics
 		if batch_idx % 100 == 0:
-			print('Epoch [%d/%d], Batch [%d/%d] Classification Loss: %.4f VAE Loss: %.4f Accuracy: %0.2f '
+			print('Epoch [%d/%d], Batch [%d/%d] VAE Loss: %.4f Accuracy: %0.2f '
 				  % (self.curr_epoch, params['train']['num_epochs'],
 					 batch_idx, self.trainset_size,
-					 classification_loss.data[0],
-					 vae_loss.data[0],
+					 loss.data[0],
 					 accuracy * 1.0 / params['train']['batch_size']))
 			
 		cm = updateConfusionMatrix(labels.data.cpu().numpy(), pred_labels.data.cpu().numpy())
 		
 		# clean GPU
-		del images, labels, x_hat, p_hat, _, pred_labels, mu, logvar
+		del images, labels, pred_labels, mu, logvar
 		
-		self.writer.add_scalar('minibatch_classification_loss', np.mean(classification_loss.data[0]), self.batchstep)
-		self.writer.add_scalar('minibatch_vae_loss', np.mean(vae_loss.data[0]), self.batchstep)
+		self.writer.add_scalar('minibatch_vae_loss', np.mean(loss.data[0]), self.batchstep)
 		self.batchstep += 1
 		
-		return accuracy, classification_loss.data[0], cm, vae_loss.data[0], kld.data[0], mse.data[0]
+		return accuracy, cm, loss.data[0], kld.data[0], ce.data[0]
 	
 	def validate(self):
 		self.model.eval()

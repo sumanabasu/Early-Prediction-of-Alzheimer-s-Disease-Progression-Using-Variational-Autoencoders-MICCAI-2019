@@ -9,7 +9,7 @@ else:
 	name_classes = np.asarray(['NL', 'Diseased'])
 	class_weight = [1, 1]
 	
-latent_dim = 4096
+latent_dim = 1024
 
 num_conv = 4
 img_shape = np.array([213, 197, 189])
@@ -43,7 +43,7 @@ layer_config = {
 	},
 	'conv4': {
 		'in_channels': 11,
-		'out_channels': 11 * 2,
+		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
@@ -51,10 +51,27 @@ layer_config = {
 	'gaussian'	: 11 * int(np.prod(img_shape[:])), #14 * 13 * 12,,
 	#'z_dim'	:	latent_dim,
 	
-	'fc1': {
+	'fc': {
 		'in': 11 * int(np.prod(img_shape[:])), #14 * 13 * 12,
 		'out': 4096
 	},
+	
+	'fc_mu': {
+		'in': 4096 + num_classes,
+		'out': latent_dim
+	},
+	
+	'fc_logvar': {
+		'in': 4096 + num_classes,
+		'out': latent_dim
+	},
+	
+	'fc_gen1': {
+		'in': latent_dim + num_classes,
+		'out': latent_dim
+	},
+	
+	
 	'fc2': {
 		'in': 4096,
 		'out': num_classes
@@ -110,7 +127,7 @@ params = {
 	},
 	
 	'train'	:	{
-		'model'				: 'VAE',
+		'model'				: 'CVAE',
 		'timestamp'			: 'NextLabel',	#'CurrLabel'
 		'seed'				: 42,
 		'learning_rate' 	: 0.0001,
