@@ -86,9 +86,9 @@ def plot_confusion_matrix(cm,
 	plt.ylabel('True label')
 	plt.xlabel('Predicted label')
 	
-	plt.savefig(os.path.join(location, title))
-	savePickle(location, title, cm)
-	savePickle(location, title+'(normalized)', cmn)
+	plt.savefig(os.path.join(location, title), bbox_inches="tight")
+	savePickle(location, title+'.pkl', cm)
+	savePickle(location, title+'(normalized).pkl', cmn)
 	
 def plotROC(cm, location, title):
 	fpr = cm[0,1] * 1. / np.sum(cm[0,:])
@@ -149,7 +149,8 @@ def plot_embedding(embedding, labels_actual, labels_predited, mode, location, ti
 	cb.set_ticks(loc)
 	cb.set_ticklabels(list(name_classes))
 	cb.set_label('Disease Label')
-	plt.savefig(os.path.join(location, title + '_' + mode + '.png'))
+	plt.savefig(os.path.join(location, title + '_' + mode + '.png'), additional_artists=cb,
+    bbox_inches="tight")
 
 def plot_accuracy(train_acc, test_acc, location, title='Accuracy'):
 	"""
