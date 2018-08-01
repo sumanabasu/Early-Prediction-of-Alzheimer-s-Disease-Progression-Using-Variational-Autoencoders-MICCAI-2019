@@ -24,6 +24,14 @@ def main():
 	# create an instance of the model\
 	model = AutoEncoder()
 	
+	'''
+	pretrained_dict = torch.load(
+		'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Outputs/20180713-173351/latest_model.pkl')
+	
+	# load the new state dict
+	model.load_state_dict(pretrained_dict)
+	'''
+	
 	# count model parameters
 	print('Paramater Count :', sum(p.numel() for p in model.parameters()))
 	
