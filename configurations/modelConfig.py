@@ -56,16 +56,6 @@ layer_config = {
 		'out': num_classes
 	},
 	
-	'fc_enc' : {
-		'in'	: 11 * int(np.prod(img_shape[:])),
-		'out'	: 512
-	},
-	
-	'fc_dec' : {
-		'in'	: 512,
-		'out'	: 11 * int(np.prod(img_shape[:]))
-	},
-	
 	'tconv1': {
 		'in_channels': 11,
 		'out_channels': 11,
