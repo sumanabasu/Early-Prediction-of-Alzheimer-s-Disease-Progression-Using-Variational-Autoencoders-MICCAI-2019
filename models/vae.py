@@ -65,9 +65,9 @@ class VAE(nn.Module):
 										 stride=layer_config['tconv4']['stride'],
 										 padding=layer_config['tconv4']['padding'])
 		
-		#self.fc_mean = nn.Linear(layer_config['gaussian'], layer_config['z_dim'])
-		#self.fc_logvar = nn.Linear(layer_config['gaussian'], layer_config['z_dim'])
-		#self.lineard = nn.Linear(layer_config['z_dim'], layer_config['gaussian'])
+		self.fc_mean = nn.Linear(layer_config['gaussian'], layer_config['z_dim'])
+		self.fc_logvar = nn.Linear(layer_config['gaussian'], layer_config['z_dim'])
+		self.lineard = nn.Linear(layer_config['z_dim'], layer_config['gaussian'])
 
 		self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
 	
@@ -133,15 +133,12 @@ class VAE(nn.Module):
 		# print('encoder : ', self.shapes)
 		# print(x.size())
 		
-		# split
-		x = torch.split(x, split_size=11, dim=1)
-		
 		# flatten
-		mu = x[0].contiguous().view(x[0].size(0), -1)
-		logvar = x[1].contiguous().view(x[1].size(0), -1)
+		h = x.view(x.size(0), -1)
+		#print(h.size())
 		
-		print(x[0].size(), mu.size())
-		print(x[1].size, logvar.size())
+		mu = self.fc_mean(h)
+		logvar = self.fc_logvar(h)
 		
 		return mu, logvar
 	
@@ -153,9 +150,9 @@ class VAE(nn.Module):
 	
 	def decoder(self, z):
 		#print('decoder : ', x.size())
-		#x_hat = (self.relu(self.lineard(z)))
+		x_hat = (self.relu(self.lineard(z)))
 		#print(x_hat.size())
-		x_hat = z.contiguous().view(z.size(0), -1, int(img_shape[0]), int(img_shape[1]), int(img_shape[2]))
+		x_hat = x_hat.view(x_hat.size(0), -1, int(img_shape[0]), int(img_shape[1]), int(img_shape[2]))
 		#print(x_hat.size())
 		
 		x_hat = (self.relu(self.tbn1(self.tconv1(self.upsample(x_hat)))))

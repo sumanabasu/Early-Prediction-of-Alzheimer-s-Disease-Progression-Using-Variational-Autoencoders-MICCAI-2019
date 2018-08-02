@@ -9,7 +9,7 @@ else:
 	name_classes = np.asarray(['NL', 'Diseased'])
 	class_weight = [1, 1]
 	
-latent_dim = 4096
+latent_dim = 1024
 
 num_conv = 4
 img_shape = np.array([213, 197, 189])
@@ -43,20 +43,20 @@ layer_config = {
 	},
 	'conv4': {
 		'in_channels': 11,
-		'out_channels': 11 * 2,
+		'out_channels': 11,
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
 	},
-	'gaussian'	: 11 * int(np.prod(img_shape[:])), #14 * 13 * 12,,
-	#'z_dim'	:	latent_dim,
+	'gaussian': 11 * int(np.prod(img_shape[:])),  # 14 * 13 * 12,,
+	'z_dim': latent_dim,
 	
 	'fc1': {
-		'in': 11 * int(np.prod(img_shape[:])) , #14 * 13 * 12,
-		'out': 4096
+		'in': latent_dim,  # 14 * 13 * 12,
+		'out': 1024
 	},
 	'fc2': {
-		'in': 4096,
+		'in': 1024,
 		'out': num_classes
 	},
 	
@@ -66,7 +66,7 @@ layer_config = {
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
-		#'output_padding' : 1	#(0, 0, 1)
+		# 'output_padding' : 1	#(0, 0, 1)
 	},
 	'tconv2': {
 		'in_channels': 11,
@@ -74,7 +74,7 @@ layer_config = {
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
-		#'output_padding' : 1
+		# 'output_padding' : 1
 	},
 	'tconv3': {
 		'in_channels': 11,
@@ -82,7 +82,7 @@ layer_config = {
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
-		#'output_padding' : 1	#(0, 0, 0)
+		# 'output_padding' : 1	#(0, 0, 0)
 	},
 	'tconv4': {
 		'in_channels': 11,
@@ -90,7 +90,7 @@ layer_config = {
 		'kernel_size': 3,
 		'stride': 1,
 		'padding': 1
-		#'output_padding' : 1	#(0, 0, 0)
+		# 'output_padding' : 1	#(0, 0, 0)
 	},
 	
 	'maxpool3d': {
@@ -117,7 +117,7 @@ params = {
 		'num_epochs' 		: 100,
 		'batch_size' 		: 2,
 		'label_weights' 	: class_weight,
-		'lambda'			: 2.5,
+		'lambda'			: 1,
 		'lr_schedule'		: [15, 25, 35]
 	}
 }
