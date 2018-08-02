@@ -132,8 +132,7 @@ class Trainer(object):
 		self.writer.add_scalar('train_accuracy', minibatch_accuracy, self.curr_epoch)
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
-																			  '(Train)')
+		plot_confusion_matrix(cm, location=self.expt_folder, title='VAE on Train Set')
 		
 		# F1 Score
 		f1_score = calculateF1Score(cm)
@@ -239,8 +238,7 @@ class Trainer(object):
 		#print('KLD : ', kld)
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
-																			  'without normalization (Valid)')
+		plot_confusion_matrix(cm, location=self.expt_folder, title='VAE on Validation Set')
 		
 		# F1 Score
 		f1_score = calculateF1Score(cm)
@@ -281,8 +279,8 @@ class Trainer(object):
 			del img
 			pb.update(1)
 			
-			encoder_embedding.extend(np.array(enc_emb))
-			classifier_embedding.extend(np.array(cls_emb))
+			encoder_embedding.extend(np.array(enc_emb.data.cpu().numpy()))
+			classifier_embedding.extend(np.array(cls_emb.data.cpu().numpy()))
 			pred_labels.extend(np.array(predicted.cpu().numpy()))
 			act_labels.extend(np.array(labels.numpy()))
 		
@@ -295,8 +293,7 @@ class Trainer(object):
 		print('Test Losses : %0.6f' % test_losses)
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
-																			  'without normalization (Test)')
+		plot_confusion_matrix(cm, location=self.expt_folder, title='VAE on Test Set')
 		
 		# F1 Score
 		print('F1 Score : ', calculateF1Score(cm))
@@ -308,14 +305,16 @@ class Trainer(object):
 		act_labels = np.array(act_labels)
 		
 		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
-					   title='encoder_embedding_valid')
+					   title='encoder_embedding_test')
 		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
-					   title='encoder_embedding_valid')
+					   title='encoder_embedding_test')
 		
 		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
-					   title='classifier_embedding_valid')
+					   title='classifier_embedding_test')
 		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
-					   title='classifier_embedding_valid')
+					   title='classifier_embedding_test')
+		
+		
 		
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
