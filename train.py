@@ -103,8 +103,7 @@ class Trainer(object):
 		self.writer.add_scalar('train_accuracy', minibatch_accuracy, self.curr_epoch)
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
-																			  '(Train)')
+		plot_confusion_matrix(cm, location=self.expt_folder, title='CNN on Train Set')
 		
 		# F1 Score
 		f1_score = calculateF1Score(cm)
@@ -185,8 +184,7 @@ class Trainer(object):
 		self.writer.add_scalar('validation_loss', np.mean(self.valid_losses), self.curr_epoch)
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
-																			  'without normalization (Valid)')
+		plot_confusion_matrix(cm, location=self.expt_folder, title='CNN on Validation Set')
 		
 		# F1 Score
 		f1_score = calculateF1Score(cm)
@@ -240,8 +238,7 @@ class Trainer(object):
 		print('Test Losses : %0.6f' % test_losses)
 		
 		# Plot confusion matrices
-		plot_confusion_matrix(cm, location=self.expt_folder, title='Confusion matrix, ' \
-																			  'without normalization (Test)')
+		plot_confusion_matrix(cm, location=self.expt_folder, title='CNN on Test Set')
 		
 		# F1 Score
 		print('F1 Score : ', calculateF1Score(cm))
