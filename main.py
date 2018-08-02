@@ -44,8 +44,7 @@ def main():
 	trainer = Trainer(model, train_loader, valid_loader, expt_folder)
 
 	# train model
-	#trainer.train()
-	trainer.validate()
+	trainer.train()
 	
 	# test model
 	trainer.test(test_loader)
