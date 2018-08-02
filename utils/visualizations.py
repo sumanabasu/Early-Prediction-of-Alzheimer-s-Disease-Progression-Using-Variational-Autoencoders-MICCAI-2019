@@ -85,7 +85,7 @@ def plot_confusion_matrix(cm,
 	plt.ylabel('True label')
 	plt.xlabel('Predicted label')
 	
-	plt.savefig(os.path.join(location, title))
+	plt.savefig(os.path.join(location, title), bbox_inches="tight")
 	savePickle(location, title+'.pkl', cm)
 	savePickle(location, title+'(normalized)'+'.pkl', cmn)
 	
@@ -150,7 +150,7 @@ def plot_embedding(embedding, labels_actual, labels_predited, mode, location):
 	cb.set_ticks(loc)
 	cb.set_ticklabels(list(name_classes))
 	cb.set_label('Disease Label')
-	plt.savefig(os.path.join(location, mode+'.png'))
+	plt.savefig(os.path.join(location, mode+'.png'), additional_artists=cb, bbox_inches="tight")
 
 
 def plot_accuracy(train_acc, test_acc, location, title='Accuracy'):
