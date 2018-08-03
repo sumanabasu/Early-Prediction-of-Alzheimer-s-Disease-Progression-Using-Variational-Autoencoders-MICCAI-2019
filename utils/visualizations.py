@@ -220,6 +220,6 @@ def plotROC(y_true, scores, location, title):
 	plt.ylim([0.0, 1.05])
 	plt.xlabel('False Positive Rate')
 	plt.ylabel('True Positive Rate')
-	plt.title('Receiver operating characteristic example')
+	plt.title(title)
 	plt.legend(loc="lower right")
 	plt.savefig(os.path.join(location, title + '.png'), bbox_inches="tight")
