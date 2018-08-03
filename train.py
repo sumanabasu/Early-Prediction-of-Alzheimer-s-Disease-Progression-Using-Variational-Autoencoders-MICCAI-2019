@@ -227,6 +227,7 @@ class Trainer(object):
 		classifier_embedding = []
 		pred_labels = []
 		act_labels = []
+		class_prob = []
 		
 		pb = tqdm(total=len(test_loader))
 		
@@ -244,11 +245,13 @@ class Trainer(object):
 			
 			del img
 			pb.update(1)
+			outputs = torch.exp(outputs)
 			
 			encoder_embedding.extend(np.array(enc_emb.data.cpu().numpy()))
 			classifier_embedding.extend(np.array(cls_emb.data.cpu().numpy()))
 			pred_labels.extend(np.array(predicted.cpu().numpy()))
 			act_labels.extend(np.array(labels.numpy()))
+			class_prob.extend(np.array(outputs.data.cpu().numpy()))
 		
 		pb.close()
 		
@@ -271,6 +274,7 @@ class Trainer(object):
 		classifier_embedding = np.array(classifier_embedding)
 		pred_labels = np.array(pred_labels)
 		act_labels = np.array(act_labels)
+		class_prob = np.array(class_prob)
 		
 		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
 					   title='encoder_embedding_test')
@@ -284,4 +288,5 @@ class Trainer(object):
 		
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
+		plotROC(act_labels, class_prob, location=self.expt_folder, title='ROC (AE on Test Set)')
 		
