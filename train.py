@@ -205,6 +205,7 @@ class Trainer(object):
 		embedding = []
 		pred_labels = []
 		act_labels = []
+		class_prob = []
 		
 		pb = tqdm(total=len(self.valid_loader))
 		
@@ -224,10 +225,12 @@ class Trainer(object):
 			
 			del img
 			pb.update(1)
+			outputs = torch.exp(outputs)
 		
 			embedding.extend(np.array(features.data.cpu().numpy()))
 			pred_labels.extend(np.array(predicted.cpu().numpy()))
 			act_labels.extend(np.array(labels.numpy()))
+			class_prob.extend(np.array(outputs.data.cpu().numpy()))
 		
 		pb.close()
 		
@@ -247,10 +250,12 @@ class Trainer(object):
 		embedding = np.array(embedding)
 		pred_labels = np.array(pred_labels)
 		act_labels = np.array(act_labels)
+		class_prob = np.array(class_prob)
 		
 		plot_embedding(embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder)
 		plot_embedding(embedding, act_labels, pred_labels, mode='pca', location = self.expt_folder)
 		
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
+		plotROC(act_labels, class_prob, location=self.expt_folder, title='ROC (CNN on Test Set)')
 		

@@ -30,7 +30,7 @@ def main():
 	'''
 	# load pretrained weights
 	pretrained_dict = torch.load(
-		'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Outputs/20180622-120058/latest_model.pkl')
+		'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Outputs/20180802-151154/latest_model.pkl')
 	
 	# load the new state dict
 	model.load_state_dict(pretrained_dict)

@@ -17,6 +17,7 @@ import torch
 from configurations.modelConfig import num_classes, name_classes
 from sklearn.metrics import auc
 from sklearn import decomposition
+from sklearn.metrics import roc_curve, auc
 
 def visualizeSlices(mri, mri_flag, location, file_name):
 	'''
@@ -88,7 +89,8 @@ def plot_confusion_matrix(cm,
 	plt.savefig(os.path.join(location, title), bbox_inches="tight")
 	savePickle(location, title+'.pkl', cm)
 	savePickle(location, title+'(normalized)'+'.pkl', cmn)
-	
+
+'''
 def plotROC(cm, location, title):
 	fpr = cm[0,1] * 1. / np.sum(cm[0,:])
 	tpr = cm[1,1] * 1. /np.sum(cm[1,:])
@@ -102,7 +104,8 @@ def plotROC(cm, location, title):
 	plt.title('Receiver operating characteristic example')
 	#plt.legend(loc="lower right")
 	plt.savefig(os.path.join(location, title))
-	
+'''
+
 def plot_embedding(embedding, labels_actual, labels_predited, mode, location):
 
 	plt.clf()
@@ -193,3 +196,33 @@ def run_test():
 	visualizeFilters(model_weights)
 	
 #run_test()
+
+def plotROC(y_true, scores, location, title):
+	# Compute ROC curve and ROC area for each class
+	
+	# one-hot encoding
+	onehot = np.zeros((y_true.shape[0], num_classes), dtype=int)
+	for item in range(y_true.shape[0]):
+		onehot[item, y_true[item]] = 1
+	
+	y_true = onehot
+	
+	fpr = dict()
+	tpr = dict()
+	roc_auc = dict()
+	for i in range(num_classes):
+		fpr[i], tpr[i], _ = roc_curve(y_true[:, i], scores[:, i])
+		roc_auc[i] = auc(fpr[i], tpr[i])
+	
+	plt.figure()
+	lw = 1
+	plt.plot(fpr[1], tpr[1], color='darkorange',
+			 lw=lw, label='ROC curve (area = %0.2f)' % roc_auc[1])
+	plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+	plt.xlim([0.0, 1.0])
+	plt.ylim([0.0, 1.05])
+	plt.xlabel('False Positive Rate')
+	plt.ylabel('True Positive Rate')
+	plt.title(title)
+	plt.legend(loc="lower right")
+	plt.savefig(os.path.join(location, title + '.png'), bbox_inches="tight")
