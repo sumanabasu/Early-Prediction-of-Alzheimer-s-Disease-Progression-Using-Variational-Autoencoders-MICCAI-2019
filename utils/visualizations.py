@@ -130,6 +130,7 @@ def plot_embedding(embedding, labels_actual, labels_predicted, mode, location, t
 	plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
 	cb = plt.colorbar()
 	loc = np.arange(0, max(labels_actual), max(labels_actual) / float(len(colors)))
+	#loc = np.arange(0, 1.0, 1.0 / float(len(colors)))
 	cb.set_ticks(loc)
 	cb.set_ticklabels(['NL', 'Diseased'])
 	cb.set_label('Disease Label')
