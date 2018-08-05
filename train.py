@@ -289,4 +289,55 @@ class Trainer(object):
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
 		plotROC(act_labels, class_prob, location=self.expt_folder, title='ROC (AE on Test Set)')
+	
+	'''
+	def test(self, test_loader):
+		self.model.eval()
+		print ('Test...')
 		
+		encoder_embedding = []
+		classifier_embedding = []
+		pred_labels = []
+		act_labels = []
+		
+		pb = tqdm(total=len(self.valid_loader))
+		
+		for i, (images, labels) in enumerate(test_loader):
+			for itr in range(20):
+				print('iteration:', itr)
+				print('label:', labels.cpu())
+				
+				img = Variable(images, volatile=True).cuda()
+				_, outputs, enc_emb, cls_emb = self.model(img)
+				_, predicted = torch.max(outputs.data, 1)
+				labels = labels.view(-1, )
+				
+				del img
+				pb.update(1)
+				
+				encoder_embedding.extend(np.array(enc_emb.data.cpu().numpy()))
+				classifier_embedding.extend(np.array(cls_emb.data.cpu().numpy()))
+				pred_labels.extend(np.array(predicted.cpu().numpy()))
+				act_labels.extend(np.array(labels.numpy()))
+			
+			if i == 0:
+				break
+		
+		pb.close()
+		
+		# plot PCA or tSNE
+		encoder_embedding = np.array(encoder_embedding)
+		classifier_embedding = np.array(classifier_embedding)
+		pred_labels = np.array(pred_labels)
+		act_labels = np.array(act_labels)
+		
+		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
+					   title='encoder_embedding_test')
+		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
+					   title='encoder_embedding_test')
+		
+		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
+					   title='classifier_embedding_test')
+		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
+					   title='classifier_embedding_test')
+	'''
