@@ -11,8 +11,6 @@ else:
 	class_weight = [1, 1]
 	
 latent_dim = 1024
-=======
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 
 if num_classes == 3:
 	name_classes = np.asarray(['NL', 'MCI', 'AD'])
@@ -150,8 +148,6 @@ layer_config = {
 		'out': num_classes
 	},
 	
-<<<<<<< Updated upstream
-=======
 	'fc_enc' : {
 		'in'	: 11 * int(np.prod(img_shape[:])),
 		'out'	: 1024
@@ -162,7 +158,6 @@ layer_config = {
 		'out'	: 11 * int(np.prod(img_shape[:]))
 	},
 	
->>>>>>> Stashed changes
 	'tconv1': {
 		'in_channels': 11,
 		'out_channels': 11,
@@ -213,23 +208,17 @@ params = {
 	},
 	
 	'train'	:	{
-<<<<<<< HEAD
 		'model'				: 'VAE',
-=======
 		'model'				: 'CNN',
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		'timestamp'			: 'NextLabel',	#'CurrLabel'
 		'seed'				: 42,
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
-<<<<<<< HEAD
 		'batch_size' 		: 2,
 		'label_weights' 	: class_weight,
 		'lambda'			: 1,
-=======
 		'batch_size' 		: 4,
 		'label_weights' 	: class_weight,
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		'lr_schedule'		: [15, 25, 35]
 	}
 }
