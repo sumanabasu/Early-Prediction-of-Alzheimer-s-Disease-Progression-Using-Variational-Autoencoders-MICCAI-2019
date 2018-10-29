@@ -17,6 +17,86 @@ img_shape = np.array([213, 197, 189])
 for _ in range(num_conv):
 	img_shape = np.ceil(img_shape / 2)
 	
+posterior_layer_config = {
+	'conv1': {
+		'in_channels': 1,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv2': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv3': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv4': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'maxpool3d': {
+		'ln': {
+			'kernel': 2,
+			'stride': 2
+		}
+	},
+	'gaussian': 11 * int(np.prod(img_shape[:])),
+	
+	'z_dim': latent_dim
+}
+
+prior_layer_config = {
+	'conv1': {
+		'in_channels': 1,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv2': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv3': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'conv4': {
+		'in_channels': 11,
+		'out_channels': 11,
+		'kernel_size': 3,
+		'stride': 1,
+		'padding': 1
+	},
+	'maxpool3d': {
+		'ln': {
+			'kernel': 2,
+			'stride': 2
+		}
+	},
+	'gaussian': 11 * int(np.prod(img_shape[:])),
+	
+	'z_dim': latent_dim
+}
+	
 #img_shape.astype(np.int32)
 
 layer_config = {
