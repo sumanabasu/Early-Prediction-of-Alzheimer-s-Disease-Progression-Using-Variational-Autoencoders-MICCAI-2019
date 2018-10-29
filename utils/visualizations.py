@@ -14,10 +14,16 @@ import numpy as np
 from scipy.misc import imsave
 from save import savePickle
 import torch
+<<<<<<< HEAD
 from configurations.modelConfig import name_classes, num_classes
 from sklearn.metrics import auc
 from sklearn import decomposition
 from sklearn.manifold import TSNE
+=======
+from configurations.modelConfig import num_classes, name_classes
+from sklearn.metrics import auc
+from sklearn import decomposition
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 from sklearn.metrics import roc_curve, auc
 
 def visualizeSlices(mri, mri_flag, location, file_name):
@@ -91,6 +97,7 @@ def plot_confusion_matrix(cm,
 	savePickle(location, title+'.pkl', cm)
 	savePickle(location, title+'(normalized)'+'.pkl', cmn)
 
+<<<<<<< HEAD
 
 def plot_embedding(embedding, labels_actual, labels_predicted, mode, location, title):
 	plt.clf()
@@ -136,15 +143,16 @@ def plot_embedding(embedding, labels_actual, labels_predicted, mode, location, t
 	cb.set_label('Disease Label')
 	plt.savefig(os.path.join(location, title + '_' + mode + '.png'), additional_artists=cb, bbox_inches="tight")
 	
+=======
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 '''
 def plotROC(cm, location, title):
 	fpr = cm[0,1] * 1. / np.sum(cm[0,:])
 	tpr = cm[1,1] * 1. /np.sum(cm[1,:])
 	
 	auc_ = auc(fpr, tpr)
-	plt.plot(fpr, tpr, color='b',
-			 label=r'ROC (AUC = %0.2f)' % (auc_),
-			 lw=2, alpha=.8)
+	plt.plot(fpr, tpr, color='b', label=r'ROC (AUC = %0.2f)' % (auc_), lw=2, alpha=.8)
+	plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', label='Random', alpha=.8)
 	
 	plt.xlabel('False Positive Rate')
 	plt.ylabel('True Positive Rate')
@@ -152,6 +160,58 @@ def plotROC(cm, location, title):
 	#plt.legend(loc="lower right")
 	plt.savefig(os.path.join(location, title))
 '''
+<<<<<<< HEAD
+=======
+
+def plot_embedding(embedding, labels_actual, labels_predited, mode, location):
+
+	plt.clf()
+	if num_classes == 2:
+		colors = ['green', 'red']
+	else:
+		colors = ['green', 'red', 'blue']
+	
+	if mode == 'pca':
+		# PCA
+		pca = decomposition.PCA(n_components=2)
+		pca.fit(embedding)
+		x_embedded = pca.transform(embedding)
+		'''
+		axes = plt.gca()
+		axes.set_xlim([-50, 50])
+		axes.set_ylim([-40, 20])
+		'''
+		
+	elif mode == 'tsne':
+		# tSNE
+		from sklearn.manifold import TSNE
+		tsne = TSNE(n_components=2, init='random', random_state=0)
+		x_embedded = tsne.fit_transform(embedding)
+	else:
+		print('wrong mode')
+		pass
+	
+	
+	plt.subplot(1, 2, 1)
+	plt.title('actuals labels')
+	
+	plt.scatter(x_embedded[:,0], x_embedded[:,1], c = labels_actual, cmap=matplotlib.colors.ListedColormap(colors),
+				alpha=0.5, edgecolors='none')
+	
+	plt.subplot(1, 2, 2)
+	plt.title('predicted labels')
+	
+	plt.scatter(x_embedded[:, 0], x_embedded[:, 1], c=labels_predited, cmap=matplotlib.colors.ListedColormap(colors),
+				alpha=0.5, edgecolors='none')
+	
+	plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+	cb = plt.colorbar()
+	loc = np.arange(0, max(labels_actual), max(labels_actual) / float(len(colors)))
+	cb.set_ticks(loc)
+	cb.set_ticklabels(list(name_classes))
+	cb.set_label('Disease Label')
+	plt.savefig(os.path.join(location, mode+'.png'), additional_artists=cb, bbox_inches="tight")
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 
 
 def plot_accuracy(train_acc, test_acc, location, title='Accuracy'):
@@ -223,4 +283,8 @@ def plotROC(y_true, scores, location, title):
 	plt.ylabel('True Positive Rate')
 	plt.title(title)
 	plt.legend(loc="lower right")
+<<<<<<< HEAD
 	plt.savefig(os.path.join(location, title + '.png'), bbox_inches="tight")
+=======
+	plt.savefig(os.path.join(location, title + '.png'), bbox_inches="tight")
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a

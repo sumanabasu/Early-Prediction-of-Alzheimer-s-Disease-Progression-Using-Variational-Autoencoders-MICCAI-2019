@@ -15,6 +15,18 @@ from utils.save import saveModelandMetrics
 from torch.optim.lr_scheduler import MultiStepLR
 from data.splitDataset import getIndicesTrainValidTest
 from utils.visualizations import plotROC
+import pickle
+from configurations.paths import paths, file_names
+import os
+
+train_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+											  file_names['data']['Train_set_indices']), 'r'))
+
+valid_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+											  file_names['data']['Valid_set_indices']), 'r'))
+
+test_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
+											 file_names['data']['Test_set_indices']), 'r'))
 
 
 class Trainer(object):
@@ -37,6 +49,7 @@ class Trainer(object):
 		self.expt_folder = expt_folder
 		self.writer = SummaryWriter(log_dir=expt_folder)
 		
+<<<<<<< HEAD
 		self.train_losses_class, self.train_losses_vae, self.train_mse, self.train_kld, \
 		self.valid_losses, self.valid_mse, self.valid_kld, \
 		self.train_f1_Score, self.valid_f1_Score, \
@@ -63,13 +76,24 @@ class Trainer(object):
 	def train(self):
 		scheduler = MultiStepLR(self.optimizer, milestones=params['train']['lr_schedule'], gamma=0.1)  # [40,
 		# 60] earlier
+=======
+		self.train_losses, self.train_f1_Score, self.valid_losses, self.valid_f1_Score, self.train_accuracy, \
+		self.valid_accuracy = ([] for i in range(6))
+	
+	def train(self):
+		scheduler = MultiStepLR(self.optimizer, milestones=params['train']['lr_schedule'], gamma=0.1)	# [40, 60] earlier
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		for _ in range(params['train']['num_epochs']):
 			print('Training...\nEpoch : ' + str(self.curr_epoch))
 			scheduler.step()
 			
 			# Train Model
+<<<<<<< HEAD
 			accuracy, classification_loss, vae_loss, mse, kld, f1_score = self.trainEpoch()
+=======
+			accuracy, loss, f1_score = self.trainEpoch()
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 			
 			self.train_losses_class.append(classification_loss)
 			self.train_losses_vae.append(vae_loss)
@@ -117,12 +141,18 @@ class Trainer(object):
 		
 		pbt.close()
 		
+<<<<<<< HEAD
 		minibatch_losses_class /= self.trainset_size
 		minibatch_losses_vae /= self.trainset_size
 		minibatch_mse /= self.trainset_size
 		minibatch_kld /= self.trainset_size
 		minibatch_accuracy /= self.trainset_size
 		
+=======
+		minibatch_losses /= len(train_indices)
+		minibatch_accuracy /= len(train_indices)
+			
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		# Plot losses
 		self.writer.add_scalar('train_classification_loss', minibatch_losses_class, self.curr_epoch)
 		self.writer.add_scalar('train_vae_loss', minibatch_losses_vae, self.curr_epoch)
@@ -131,7 +161,11 @@ class Trainer(object):
 		self.writer.add_scalar('train_accuracy', minibatch_accuracy, self.curr_epoch)
 		
 		# Plot confusion matrices
+<<<<<<< HEAD
 		plot_confusion_matrix(cm, location=self.expt_folder, title='VAE on Train Set')
+=======
+		plot_confusion_matrix(cm, location=self.expt_folder, title='CNN on Train Set')
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		# F1 Score
 		f1_score = calculateF1Score(cm)
@@ -139,9 +173,15 @@ class Trainer(object):
 		print('F1 Score : ', f1_score)
 		
 		# plot ROC curve
+<<<<<<< HEAD
 		# plotROC(cm, location=self.expt_folder, title='ROC Curve(Train)')
 		
 		return minibatch_accuracy, minibatch_losses_class, minibatch_losses_vae, minibatch_mse, minibatch_kld, f1_score
+=======
+		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Train)')
+		
+		return (minibatch_accuracy, minibatch_losses, f1_score)
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 	
 	def trainBatch(self, batch_idx, images, labels):
 		images = Variable(images).cuda()
@@ -149,6 +189,11 @@ class Trainer(object):
 		labels = labels.view(-1, )
 		
 		# Forward + Backward + Optimize
+<<<<<<< HEAD
+=======
+		self.optimizer.zero_grad()
+		outputs, _ = self.model(images)
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		# x_hat is reconstructed image, p_hat is predicted classification probability
 		_, _, mu, logvar, x_hat, p_hat = self.model(images)
@@ -164,7 +209,11 @@ class Trainer(object):
 		self.optimizer.step()
 		
 		# Compute accuracy
+<<<<<<< HEAD
 		_, pred_labels = torch.max(p_hat, 1)
+=======
+		_, pred_labels = torch.max(outputs, 1)
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		accuracy = (labels == pred_labels).float().sum()
 		
 		# Print metrics
@@ -199,8 +248,13 @@ class Trainer(object):
 		
 		for i, (images, labels) in enumerate(self.valid_loader):
 			img = Variable(images, volatile=True).cuda()
+<<<<<<< HEAD
 			_, _, mu, logvar, x_hat, p_hat = self.model(img)
 			_, predicted = torch.max(p_hat.data, 1)
+=======
+			outputs, _ = self.model(img)
+			_, predicted = torch.max(outputs.data, 1)
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 			labels = labels.view(-1, )
 			correct += ((predicted.cpu() == labels).float().sum())
 			
@@ -215,10 +269,14 @@ class Trainer(object):
 		
 		pb.close()
 		
+<<<<<<< HEAD
 		correct /= self.validset_size
 		mse /= self.validset_size
 		kld /= self.validset_size
 		loss /= self.validset_size
+=======
+		correct /= len(valid_indices)
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		print('Validation Accuracy : %0.6f' % correct)
 		
@@ -236,16 +294,28 @@ class Trainer(object):
 		# print('KLD : ', kld)
 		
 		# Plot confusion matrices
+<<<<<<< HEAD
 		plot_confusion_matrix(cm, location=self.expt_folder, title='VAE on Validation Set')
+=======
+		plot_confusion_matrix(cm, location=self.expt_folder, title='CNN on Validation Set')
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		# F1 Score
 		f1_score = calculateF1Score(cm)
 		self.writer.add_scalar('valid_f1_score', f1_score, self.curr_epoch)
+<<<<<<< HEAD
 		print('F1 Score : ', calculateF1Score(cm))
 		self.valid_f1_Score.append(f1_score)
 	
 	# plot ROC curve
 	# plotROC(cm, location=self.expt_folder, title='ROC Curve(Valid)')
+=======
+		print('F1 Score : ',f1_score)
+		self.valid_f1_Score.append(f1_score)
+		
+		# plot ROC curve
+		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Valid)')
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 	
 	def test(self, test_loader):
 		self.model.eval()
@@ -254,6 +324,10 @@ class Trainer(object):
 		correct = 0
 		test_losses = 0
 		cm = np.zeros((num_classes, num_classes), int)
+		embedding = []
+		pred_labels = []
+		act_labels = []
+		class_prob = []
 		
 		encoder_embedding = []
 		classifier_embedding = []
@@ -265,8 +339,15 @@ class Trainer(object):
 		
 		for i, (images, labels) in enumerate(test_loader):
 			img = Variable(images, volatile=True).cuda()
+<<<<<<< HEAD
 			enc_emb, cls_emb, _, _, _, p_hat = self.model(img)
 			_, predicted = torch.max(p_hat.data, 1)
+=======
+			outputs, features = self.model(img)
+			#outputs = outputs.exp()
+			#print(outputs.size(), features.size())
+			_, predicted = torch.max(outputs.data, 1)
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 			labels = labels.view(-1, )
 			correct += ((predicted.cpu() == labels).float().sum())
 			
@@ -277,6 +358,7 @@ class Trainer(object):
 			
 			del img
 			pb.update(1)
+<<<<<<< HEAD
 			p_hat = torch.exp(p_hat)
 			
 			encoder_embedding.extend(np.array(enc_emb.data.cpu().numpy()))
@@ -289,23 +371,45 @@ class Trainer(object):
 		
 		correct /= self.testset_size
 		test_losses /= self.testset_size
+=======
+			outputs = torch.exp(outputs)
+		
+			embedding.extend(np.array(features.data.cpu().numpy()))
+			pred_labels.extend(np.array(predicted.cpu().numpy()))
+			act_labels.extend(np.array(labels.numpy()))
+			class_prob.extend(np.array(outputs.data.cpu().numpy()))
+		
+		pb.close()
+		
+		correct /= len(test_indices)
+		test_losses /= len(test_indices)
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		print('Test Accuracy : %0.6f' % correct)
 		print('Test Losses : %0.6f' % test_losses)
 		
 		# Plot confusion matrices
+<<<<<<< HEAD
 		plot_confusion_matrix(cm, location=self.expt_folder, title='VAE on Test Set')
+=======
+		plot_confusion_matrix(cm, location=self.expt_folder, title='CNN on Test Set')
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		# F1 Score
 		print('F1 Score : ', calculateF1Score(cm))
 		
 		# plot PCA or tSNE
+<<<<<<< HEAD
 		encoder_embedding = np.array(encoder_embedding)
 		classifier_embedding = np.array(classifier_embedding)
+=======
+		embedding = np.array(embedding)
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		pred_labels = np.array(pred_labels)
 		act_labels = np.array(act_labels)
 		class_prob = np.array(class_prob)
 		
+<<<<<<< HEAD
 		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
 					   title='encoder_embedding_test')
 		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
@@ -371,3 +475,12 @@ class Trainer(object):
 		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
 					   title='classifier_embedding_test')
 	'''
+=======
+		plot_embedding(embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder)
+		plot_embedding(embedding, act_labels, pred_labels, mode='pca', location = self.expt_folder)
+		
+		# plot ROC curve
+		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
+		plotROC(act_labels, class_prob, location=self.expt_folder, title='ROC (CNN on Test Set)')
+		
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a

@@ -18,6 +18,9 @@ def main():
 	expt_folder = base_folder + timestr
 	if not os.path.exists(expt_folder):
 		os.mkdir(expt_folder)
+	
+	# set seed
+	torch.manual_seed(params['train']['seed'])
 		
 	print('Run : {}\n'.format(timestr))
 
@@ -27,6 +30,15 @@ def main():
 	'''
 	pretrained_dict = torch.load(
 		'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Outputs/20180719-210645/latest_model.pkl')
+	
+	# load the new state dict
+	model.load_state_dict(pretrained_dict)
+	'''
+	
+	'''
+	# load pretrained weights
+	pretrained_dict = torch.load(
+		'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Outputs/20180802-151154/latest_model.pkl')
 	
 	# load the new state dict
 	model.load_state_dict(pretrained_dict)

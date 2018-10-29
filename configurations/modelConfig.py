@@ -1,6 +1,7 @@
 import numpy as np
 
 num_classes = 2
+<<<<<<< HEAD
 
 if num_classes == 3:
 	name_classes = np.asarray(['NL', 'MCI', 'AD'])
@@ -10,7 +11,16 @@ else:
 	class_weight = [1, 1]
 	
 latent_dim = 1024
+=======
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 
+if num_classes == 3:
+	name_classes = np.asarray(['NL', 'MCI', 'AD'])
+	class_weight = [1, 1, 1]
+else:
+	name_classes = np.asarray(['NL', 'Diseased'])
+	class_weight = [1, 1]
+	
 num_conv = 4
 img_shape = np.array([213, 197, 189])
 
@@ -190,14 +200,23 @@ params = {
 	},
 	
 	'train'	:	{
+<<<<<<< HEAD
 		'model'				: 'VAE',
+=======
+		'model'				: 'CNN',
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		'timestamp'			: 'NextLabel',	#'CurrLabel'
 		'seed'				: 42,
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
+<<<<<<< HEAD
 		'batch_size' 		: 2,
 		'label_weights' 	: class_weight,
 		'lambda'			: 1,
+=======
+		'batch_size' 		: 4,
+		'label_weights' 	: class_weight,
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		'lr_schedule'		: [15, 25, 35]
 	}
 }

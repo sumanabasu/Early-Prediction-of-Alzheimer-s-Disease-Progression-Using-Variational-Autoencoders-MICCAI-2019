@@ -6,7 +6,12 @@ import time
 		
 paths = {
 	'data' : {
+<<<<<<< HEAD
 		'hdf5_path'								:	'/home/NOBACKUP/sbasu11/', #'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Inputs/',
+=======
+		'hdf5_path'								:	'/home/NOBACKUP/sbasu11/',	#'/home/ml/sbasu11/Documents/ADNI
+		# Project/ADNI_data/CNN/Inputs/',
+>>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		#'/home/NOBACKUP/sbasu11/',
 		'Input_to_Training_Model' 				: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Inputs/',
 		'ADNI_study_data_original_labels'		: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/Data Info/',
