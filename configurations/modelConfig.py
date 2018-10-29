@@ -150,6 +150,19 @@ layer_config = {
 		'out': num_classes
 	},
 	
+<<<<<<< Updated upstream
+=======
+	'fc_enc' : {
+		'in'	: 11 * int(np.prod(img_shape[:])),
+		'out'	: 1024
+	},
+	
+	'fc_dec' : {
+		'in'	: 1024,
+		'out'	: 11 * int(np.prod(img_shape[:]))
+	},
+	
+>>>>>>> Stashed changes
 	'tconv1': {
 		'in_channels': 11,
 		'out_channels': 11,
