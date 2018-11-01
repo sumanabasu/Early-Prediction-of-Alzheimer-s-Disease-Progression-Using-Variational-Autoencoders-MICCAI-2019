@@ -1,7 +1,6 @@
 import numpy as np
 
 num_classes = 2
-<<<<<<< HEAD
 
 if num_classes == 3:
 	name_classes = np.asarray(['NL', 'MCI', 'AD'])

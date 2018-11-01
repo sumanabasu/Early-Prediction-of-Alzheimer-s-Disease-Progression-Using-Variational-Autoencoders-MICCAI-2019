@@ -124,6 +124,15 @@ class generator(nn.Module):
 	'''
 	reconstructs labels
 	'''
+	def __init__(self):
+		super(generator, self).__init__()
+	
+	
+	def reparametrize(self, mu, logvar):
+		sigma = torch.exp(0.5 * logvar)
+		eps = Variable(torch.randn(mu.size())).cuda()
+		z = mu + sigma * eps
+		return z
 	
 		
 		
