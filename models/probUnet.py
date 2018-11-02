@@ -1,7 +1,8 @@
 import  torch
 import torch.nn as nn
-from configurations.modelConfig import posterior_layer_config, prior_layer_config
+from configurations.modelConfig import posterior_layer_config, prior_layer_config, generator_layer_config
 from torch.distributions.normal import Normal
+from torch.autograd import Variable
 
 class posterior(nn.Module):
 	'''
@@ -28,6 +29,11 @@ class posterior(nn.Module):
 							   out_channels=posterior_layer_config['conv4']['out_channels'],
 							   kernel_size=posterior_layer_config['conv4']['kernel_size'], stride=posterior_layer_config['conv4']['stride'],
 							   padding=posterior_layer_config['conv4']['padding'])
+		
+		self.bn1 = nn.BatchNorm3d(posterior_layer_config['conv1']['out_channels'])
+		self.bn2 = nn.BatchNorm3d(posterior_layer_config['conv2']['out_channels'])
+		self.bn3 = nn.BatchNorm3d(posterior_layer_config['conv3']['out_channels'])
+		self.bn4 = nn.BatchNorm3d(posterior_layer_config['conv4']['out_channels'])
 		
 		self.fc_mean = nn.Linear(posterior_layer_config['gaussian'], posterior_layer_config['z_dim'])
 		self.fc_var = nn.Linear(posterior_layer_config['gaussian'], posterior_layer_config['z_dim'])
@@ -91,6 +97,11 @@ class prior(nn.Module):
 							   stride=prior_layer_config['conv4']['stride'],
 							   padding=prior_layer_config['conv4']['padding'])
 		
+		self.bn1 = nn.BatchNorm3d(prior_layer_config['conv1']['out_channels'])
+		self.bn2 = nn.BatchNorm3d(prior_layer_config['conv2']['out_channels'])
+		self.bn3 = nn.BatchNorm3d(prior_layer_config['conv3']['out_channels'])
+		self.bn4 = nn.BatchNorm3d(prior_layer_config['conv4']['out_channels'])
+		
 		self.fc_mean = nn.Linear(prior_layer_config['gaussian'], prior_layer_config['z_dim'])
 		self.fc_var = nn.Linear(prior_layer_config['gaussian'], prior_layer_config['z_dim'])
 		
@@ -114,7 +125,7 @@ class prior(nn.Module):
 		
 		'''
 		# to return a Normal distribution object
-		posterior_distribution = Normal(mu, var)
+		prior_distribution = Normal(mu, var)
 		return  posterior_distribution
 		'''
 		
@@ -126,13 +137,45 @@ class generator(nn.Module):
 	'''
 	def __init__(self):
 		super(generator, self).__init__()
-	
+		self.fc1 = nn.Linear(generator_layer_config['fc1']['in'], generator_layer_config['fc1']['out'])
+		self.fc2 = nn.Linear(generator_layer_config['fc2']['in'], generator_layer_config['fc2']['out'])
+		self.relu = nn.ReLU()
+		self.logsoftmax = nn.LogSoftmax(dim=1)
 	
 	def reparametrize(self, mu, logvar):
 		sigma = torch.exp(0.5 * logvar)
 		eps = Variable(torch.randn(mu.size())).cuda()
 		z = mu + sigma * eps
 		return z
+	
+	def forward(self, z):
+		z = (self.relu(self.fc1(z)))
+		prob = self.logsoftmax(self.fc2(z))
+		return prob
+	
+class probCNN(nn.Module, prior, posterior, generator):
+	def __init__(self):
+		super(probCNN, self).__init__()
+		self.prior = prior
+		self.posterior = posterior
+		self.generator = generator
+		
+	def forward(self, inference, x_t = None, x_t_plus_1 = None, y_t_plus_1 = None):
+		if inference:
+			mu, var = self.prior(x_t)
+		else:
+			mu, var = self.posterior(x_t_plus_1, y_t_plus_1)
+			
+		z = self.generator.reparametrize(mu, var)
+		y_hat_t_plus_1 = self.generator(z)
+		
+		return y_hat_t_plus_1
+		
+		
+		
+		
+	
+	
 	
 		
 		
