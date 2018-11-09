@@ -26,6 +26,8 @@ rids = df['RID']
 rids = list(set(rids))
 print len(rids)
 
+
+
 for rid in rids:
 	subframe = df.loc[df['RID'] == rid]
 	subframe = subframe.sort_values(by=['EXAMDATE'])
@@ -34,7 +36,16 @@ for rid in rids:
 		indices = list(subframe.index)
 		for i, idx in enumerate(indices[:-1]):
 			# pdb.set_trace()
-			subframe.set_value(idx, 'DIAGNOSIS_LABEL', subframe.loc[indices[i + 1]]['DIAGNOSIS_LABEL'])
+			subframe.set_value(idx, 'Curr_LABEL', subframe.loc[indices[i]]['DIAGNOSIS_LABEL'])
+			subframe.set_value(idx, 'Next_LABEL', subframe.loc[indices[i + 1]]['DIAGNOSIS_LABEL'])
+			subframe.set_value(idx, 'Next_MRI_FileName', subframe.loc[indices[i + 1]]['FileName']) #file name of next
+		#  MRI
+			
+			'''
+			label = df.loc[df['FileName'] == subframe.loc[indices[i]]['FileName'], 'DIAGNOSIS_LABEL'].iloc[0]
+			print subframe.loc[indices[i]]['DIAGNOSIS_LABEL'], label
+			assert subframe.loc[indices[i]]['DIAGNOSIS_LABEL'] == label, "not same"
+			'''
 		
 		subframe = subframe.drop(subframe.index[len(subframe) - 1])
 		
