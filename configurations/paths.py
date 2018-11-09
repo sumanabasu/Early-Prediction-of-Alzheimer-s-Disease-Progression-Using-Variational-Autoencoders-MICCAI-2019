@@ -6,27 +6,26 @@ import time
 		
 paths = {
 	'data' : {
-<<<<<<< HEAD
-		'hdf5_path'								:	'/home/NOBACKUP/sbasu11/', #'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Inputs/',
-=======
-		'hdf5_path'								:	'/home/NOBACKUP/sbasu11/',	#'/home/ml/sbasu11/Documents/ADNI
+		'hdf5_path'								:	'/home/ml/sbasu11/Documents/ADNI '
+														'Project/ADNI_data/LabelDistribution/Inputs/',
+		#'hdf5_path'								:	'/home/NOBACKUP/sbasu11/',	#'/home/ml/sbasu11/Documents/ADNI
 		# Project/ADNI_data/CNN/Inputs/',
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		#'/home/NOBACKUP/sbasu11/',
-		'Input_to_Training_Model' 				: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Inputs/',
+		'Input_to_Training_Model' 				: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/LabelDistribution/Inputs/',
 		'ADNI_study_data_original_labels'		: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/Data Info/',
 		'Raw_MRI_location'						: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/ADNI_mnc/*.mnc'
 	},
 	'output'	:	{
-		'base_folder'							:	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/CNN/Outputs/'
+		'base_folder'							:	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/LabelDistribution/Outputs/'
 	}
 }
 
 file_names = {
 	'data'	:	{
-		'hdf5_file'								: 	'data.hdf5', #'3DMRItoNextLabel.hdf5',
+		'hdf5_file'								: 	'MRItoNextMRIandNextLabel.hdf5', #'data.hdf5',
+		#'3DMRItoNextLabel.hdf5',
 		'ADNI_study_data_oroginal_labels'		:	'DXSUM_PDXCONV_ADNIALL.csv',
-		'MRI_to_next_label_mapping'				:	'3dMRItoNextLabel.csv',
+		'MRI_to_next_label_mapping'				:	'3dMRItoNextMRIandNextLabel.csv',
 		'MRI_to_curr_label_mapping'				:	'labels.csv',
 		'RIDtoMRI'								:	'RIDtoMRIdict.pkl',
 		'Train_set_indices'						: 	'train_set_indices.pkl',
