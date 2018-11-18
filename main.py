@@ -3,9 +3,9 @@ import os
 from configurations.paths import paths, file_names
 from configurations.modelConfig import layer_config, params, data_aug
 
-from data.dataLoader import dataLoader, run_test_
+from data.dataLoader import dataLoader
 
-from models.vae import VAE
+from models.probUnet import prior, posterior, generator, probCNN
 from train import Trainer
 import time
 import torch
@@ -25,7 +25,10 @@ def main():
 	print('Run : {}\n'.format(timestr))
 
 	# create an instance of the model\
-	model = VAE()
+	prior_network = prior()
+	posterior_network = posterior()
+	generator_network = generator()
+	model = probCNN(prior_network, posterior_network, generator_network)
 	
 	'''
 	pretrained_dict = torch.load(
@@ -53,7 +56,8 @@ def main():
 	train_loader, valid_loader, test_loader = dataLoader(datafile, trans=data_aug)
 
 	# create trainer and pass all required components to it
-	trainer = Trainer(model, train_loader, valid_loader, expt_folder)
+	trainer = Trainer(prior_network, posterior_network, generator_network, model, train_loader, valid_loader,
+					  expt_folder)
 
 	# train model
 	trainer.train()
@@ -62,4 +66,5 @@ def main():
 	trainer.test(test_loader)
 	
 if __name__ == '__main__':
+	#run_tests()
 	main()
