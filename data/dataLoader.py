@@ -18,74 +18,80 @@ import torchvision.transforms as transforms
 class HDF5loader():
 	def __init__(self, filename, trans=None, train_indices=None):
 		f = h5py.File(filename, 'r',  libver='latest', swmr=True)
-		self.img_f = f['Image4D']
+		self.curr_imgs = f['CurrImage']
+		self.next_imgs = f['NextImage']
 		self.trans = trans
 		self.train_indices = train_indices
 		if num_classes == 2:
-			self.label = [0 if x == 'NL' else 1 for x in f[params['train']['timestamp']]]
+			#self.curr_labels = [0 if x == 'NL' else 1 for x in f['CurrLabel']]
+			self.next_labels = [0 if x == 'NL' else 1 for x in f['NextLabel']]
 		else:
-			self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f[params['train']['timestamp']]]
+			#self.curr_labels = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['CurrLabel']]
+			self.next_labels = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['NextLabel']]
 			
-		#self.label = [0 if x == 'NL' else (2 if x == 'AD' else 1) for x in f['NextLabel']]
-<<<<<<< HEAD
-		#self.label = [0 if x == 'NL' else 1 for x in f['CurrLabel']] #for current label	#for binary
-		# classification on current label
-		#self.label = [0 if x == 'NL' else 1 for x in f['NextLabel']]	#for binary classification on next label
-=======
-		# for binary classification
-		#self.label = [0 if x == 'NL' else 1 for x in f['CurrLabel']] #for current label
-		#self.label = [0 if x == 'NL' else 1 for x in f['NextLabel']]	#for next label
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
-		
-	def __getitem__(self, index):
-		img = self.img_f[index]
-		label = self.label[index]
-		
-		#print('original', img.shape) #(1, 189, 233, 197)
-		
-		# for coronal view (channels, depth, 0, 1)
-		img = np.moveaxis(img, 1, 3)
-		#print('1. ', img.shape)	#(1, 233, 197, 189)
-		
-		# drop 10 slices on either side since they are mostly black
-		img = img[:, 10:-10, :,:]
-		
-		# reshape to (depth, 0, 1, channels) for data augmentation
-		img = np.moveaxis(img, 0, 3)
-		#print('2. ', img.shape)	#(213, 197, 189, 1)
-		
-		# random transformation
-		if self.trans is not None and index in self.train_indices:
-			img = random_transform(img, **self.trans)
-			#print('I am ruining you!')
-		
-		# reshape back to (channels, depth, 0, 1)
-		img = np.moveaxis(img, 3, 0)
-		#print('3. ', img.shape)	#(1, 213, 197, 189)
-		
-		#normalizing image - Gaussian normalization per volume
+	def gaussianNormalization(self, img):
 		if np.std(img) != 0:  # to account for black images
 			mean = np.mean(img)
 			std = np.std(img)
 			img = 1.0 * (img - mean) / std
-
+		return img
+	
+	def toTensor(self, img, label=None):
 		img = img.astype(float)
 		img = torch.from_numpy(img).float()
-		label = torch.LongTensor([label])
+		if label is not None:
+			label = torch.LongTensor([label])
+		return img, label
 		
-		return (img ,label)
+	def __getitem__(self, index):
+		curr_img = self.curr_imgs[index]
+		#curr_label = self.curr_labels[index]
+		next_img = self.next_imgs[index]
+		next_label = self.next_labels[index]
+		
+		#print('original', img.shape) #(1, 189, 233, 197)
+		
+		# for coronal view (channels, depth, 0, 1)
+		curr_img = np.moveaxis(curr_img, 1, 3)
+		next_img = np.moveaxis(next_img, 1, 3)
+		#print('1. ', img.shape)	#(1, 233, 197, 189)
+		
+		# drop 10 slices on either side since they are mostly black
+		curr_img = curr_img[:, 10:-10, :,:]
+		next_img = next_img[:, 10:-10, :, :]
+		
+		# reshape to (depth, 0, 1, channels) for data augmentation
+		curr_img = np.moveaxis(curr_img, 0, 3)
+		next_img = np.moveaxis(next_img, 0, 3)
+		#print('2. ', img.shape)	#(213, 197, 189, 1)
+		
+		# random transformation
+		if self.trans is not None and index in self.train_indices:
+			curr_img = random_transform(curr_img, **self.trans)
+			next_img = random_transform(next_img, **self.trans)
+			#print('I am ruining you!')
+		
+		# reshape back to (channels, depth, 0, 1)
+		curr_img = np.moveaxis(curr_img, 3, 0)
+		next_img = np.moveaxis(next_img, 3, 0)
+		#print('3. ', img.shape)	#(1, 213, 197, 189)
+		
+		#normalizing image - Gaussian normalization per volume
+		curr_img = self.gaussianNormalization(curr_img)
+		next_img = self.gaussianNormalization(next_img)
+		
+		#wrap into tensors
+		curr_img, _ = self.toTensor(curr_img)
+		next_img, next_label =self.toTensor(next_img, next_label)
+		
+		return (curr_img, next_img, next_label)
 		
 	def __len__(self):
-		return self.img_f.shape[0]
+		return self.curr_imgs.shape[0]
 
 
 def dataLoader(hdf5_file, trans):
-<<<<<<< HEAD
 	num_workers = 0
-=======
-	
-	num_workers = 1
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 	pin_memory = False
 	
 	'''
@@ -120,6 +126,7 @@ def dataLoader(hdf5_file, trans):
 	
 	return (train_loader, valid_loader, test_loader)
 
+'''
 def run_test_():
 	from configurations.modelConfig import data_aug
 	max_epochs = 1
@@ -128,8 +135,6 @@ def run_test_():
 	train_loader, valid_loader, test_loader = dataLoader(datafile, trans=data_aug)
 	
 	print(len(test_loader))
-	
-	'''
 	
 	from tqdm import tqdm
 	
@@ -143,7 +148,7 @@ def run_test_():
 		
 		pbt = tqdm(total=len(test_loader))
 		
-		for batch_idx, (images, labels, index, sum_, fn) in enumerate(test_loader):
+		for batch_idx, (curr_images, next_images, next_labels, index, sum_, fn) in enumerate(test_loader):
 			#print('batch ' + str(batch_idx) + ' out of ' + str(len(train_loader)))
 			indices.extend(index)
 			img_sums_before_float.extend(sum_)
@@ -159,9 +164,8 @@ def run_test_():
 		#print(img_sums)
 		#print(img_sums_before_float)
 		#print(filenames)
-	'''
+'''
 
-	
 '''
 def run_tests():
 	n_gpus = 1
@@ -181,14 +185,14 @@ def run_tests():
 
 		print('TRAIN:')
 		for batch_idx, data_ in enumerate(train_iter):
-			batch_x, batch_y = data_
+			batch_x_curr, batch_x_next, batch_y = data_
 			print('batch ' + str(batch_idx) + str(batch_y) + ' out of ' + str(len(train_iter)))
 
 		
 		
 		print('VALID:')
 		for batch_idx, data_ in enumerate(valid_iter):
-			batch_x, batch_y = data_
+			batch_x_curr, batch_x_next, batch_y = data_
 			print('batch ' + str(batch_idx) + str(batch_y) + ' out of ' + str(len(valid_iter)))
 		
 '''
