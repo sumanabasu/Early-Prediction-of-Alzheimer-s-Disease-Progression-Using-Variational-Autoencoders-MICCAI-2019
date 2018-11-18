@@ -103,6 +103,17 @@ prior_layer_config = {
 	
 	'z_dim': latent_dim
 }
+
+generator_layer_config = {
+	'fc1': {
+		'in': latent_dim,  # 14 * 13 * 12,
+		'out': 1024
+	},
+	'fc2': {
+		'in': 1024,
+		'out': num_classes
+	}
+}
 	
 #img_shape.astype(np.int32)
 
@@ -209,7 +220,7 @@ params = {
 	'train'	:	{
 		'model'				: 'VAE',
 		'model'				: 'CNN',
-		'timestamp'			: 'NextLabel',	#'CurrLabel'
+		#'timestamp'			: 'NextLabel',	#'CurrLabel'
 		'seed'				: 42,
 		'learning_rate' 	: 0.0001,
 		'num_epochs' 		: 100,
