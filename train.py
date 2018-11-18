@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
-from configurations.modelConfig import params, num_classes
+from configurations.modelConfig import params, num_classes, latent_dim
 from tqdm import tqdm
 import numpy as np
 from utils.visualizations import plot_confusion_matrix, plot_embedding
@@ -18,6 +18,8 @@ from utils.visualizations import plotROC
 import pickle
 from configurations.paths import paths, file_names
 import os
+#from torch.distributions.normal import Normal
+#from torch.distributions.kl import kl_divergence
 
 train_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
 											  file_names['data']['Train_set_indices']), 'r'))
@@ -30,10 +32,13 @@ test_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Mo
 
 
 class Trainer(object):
-	def __init__(self, model, train_loader, valid_loader, expt_folder):
+	def __init__(self, prior, posterior, generator, model, train_loader, valid_loader, expt_folder):
 		super(Trainer, self).__init__()
 		
 		if torch.cuda.is_available():
+			self.prior = prior.cuda()
+			self.posterior = posterior.cuda()
+			self.generator = generator.cuda()
 			self.model = model.cuda()
 		
 		self.train_loader = train_loader
@@ -41,7 +46,7 @@ class Trainer(object):
 		self.optimizer = torch.optim.Adam(model.parameters(),
 										  lr=params['train']['learning_rate'])
 		self.classification_criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
-		self.reconstruction_loss = nn.MSELoss()
+		#self.crossentropy_loss = nn.CrossEntropyLoss()
 		
 		self.curr_epoch = 0
 		self.batchstep = 0
@@ -49,7 +54,6 @@ class Trainer(object):
 		self.expt_folder = expt_folder
 		self.writer = SummaryWriter(log_dir=expt_folder)
 		
-<<<<<<< HEAD
 		self.train_losses_class, self.train_losses_vae, self.train_mse, self.train_kld, \
 		self.valid_losses, self.valid_mse, self.valid_kld, \
 		self.train_f1_Score, self.valid_f1_Score, \
@@ -57,43 +61,74 @@ class Trainer(object):
 		
 		self.trainset_size, self.validset_size, self.testset_size = getIndicesTrainValidTest(requireslen=True)
 	
-	def klDivergence(self, mu, logvar):
+	def klDivergence(self, mu_prior, var_prior, mu_posterior, var_posterior):
 		# D_KL(Q(z|X) || P(z|X))
 		# P(z|X) is the real distribution, Q(z|X) is the distribution we are trying to approximate P(z|X) with
 		# calculate in closed form
-		return (-0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()))
+		'''
+		# from torch.distributions.kl import kl_divergence not available in torch 0.3.1
+		prior_distribution = Normal(mu_prior, std_prior)
+		posterior_distribution = Normal(mu_posterior, std_posterior)
+		return kl_divergence(prior_distribution, posterior_distribution)
+		return kl_divergence(prior_distribution, posterior_distribution)
+		Implemented as in : https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+		{D_{\text{KL}}({\mathcal {N}}_{0}\parallel {\mathcal {N}}_{1})={\frac {1}{2}}\left(\operatorname {tr} \left(\Sigma _{1}^{-1}\Sigma _{0}\right)+(\mu _{1}-\mu _{0})^{\mathsf {T}}\Sigma _{1}^{-1}(\mu _{1}-\mu _{0})-k+\ln \left({\frac {\det \Sigma _{1}}{\det \Sigma _{0}}}\right)\right).}
+		'''
+
+		'''
+		dim = mu_prior.size()[1]
+		print(dim)
+		
+		for var_pre, var_post, mu_pre, mu_post in var_prior, var_posterior, mu_prior, mu_posterior:
+			covar_prior = torch.diag(var_pre)
+			covar_posterior = torch.diag(var_post)
+			
+			covar_posterior_inv = torch.inverse(covar_posterior) #TODO: http://mathonline.wikidot.com/inverse-of-diagonal-matrices
+			mean_diff = mu_post - mu_pre
+			
+			# determinant of diagonal matrix is product of all elements (
+			# https://proofwiki.org/wiki/Determinant_of_Diagonal_Matrix)
+			det_pre = torch.prod(var_pre)
+			det_post = torch.prod(var_post)
+			
+			term1 = torch.trace(torch.matmul(covar_posterior_inv, covar_prior))
+			term2 = torch.matmul(torch.matmul(mean_diff.T, covar_posterior_inv), mean_diff)
+			term3 = torch.log(det_post) - torch.log(det_pre)
+			
+			kld = 0.5 * (term1 + term2 - dim + term3)
+		return kld
+		'''
+		
+		term1 = torch.trace(var_prior/var_posterior)
+		term2 = torch.sum((mu_posterior - mu_prior).pow(2) / var_posterior)
+		term3 = torch.log(torch.prod(var_posterior)) - torch.log(torch.prod(var_prior))
+		return 0.5 * (term1 + term2 - latent_dim + term3)
+		
 	
 	# self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
-	def vae_loss(self, recon_x, x, mu, logvar):
-		MSE = self.reconstruction_loss(recon_x, x)
-		# MSE = nn.CrossEntropyLoss(recon_x, x, size_average=False)
-		# BCE = F.mse_loss(recon_x, x, size_average=False)
+	def loss(self, p_hat_t_plus_1, y_t_plus_1, mu_prior, std_prior, mu_posterior, std_posterior):
+		NLL = self.classification_criterion(p_hat_t_plus_1, y_t_plus_1)
+		KLD = self.klDivergence(mu_prior, std_prior, mu_posterior, std_posterior)
 		
-		KLD = self.klDivergence(mu, logvar)
-		
-		return MSE + KLD, MSE, KLD
+		return NLL + KLD, NLL, KLD
 	
 	def train(self):
 		scheduler = MultiStepLR(self.optimizer, milestones=params['train']['lr_schedule'], gamma=0.1)  # [40,
 		# 60] earlier
-=======
+
 		self.train_losses, self.train_f1_Score, self.valid_losses, self.valid_f1_Score, self.train_accuracy, \
 		self.valid_accuracy = ([] for i in range(6))
 	
 	def train(self):
 		scheduler = MultiStepLR(self.optimizer, milestones=params['train']['lr_schedule'], gamma=0.1)	# [40, 60] earlier
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		for _ in range(params['train']['num_epochs']):
 			print('Training...\nEpoch : ' + str(self.curr_epoch))
 			scheduler.step()
 			
 			# Train Model
-<<<<<<< HEAD
 			accuracy, classification_loss, vae_loss, mse, kld, f1_score = self.trainEpoch()
-=======
 			accuracy, loss, f1_score = self.trainEpoch()
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 			
 			self.train_losses_class.append(classification_loss)
 			self.train_losses_vae.append(vae_loss)
@@ -120,20 +155,18 @@ class Trainer(object):
 		
 		cm = np.zeros((num_classes, num_classes), int)
 		
-		minibatch_losses_class = 0
-		minibatch_losses_vae = 0
+		minibatch_losses_classification = 0
+		minibatch_losses = 0
 		minibatch_accuracy = 0
 		minibatch_kld = 0
-		minibatch_mse = 0
 		
-		for batch_idx, (images, labels) in enumerate(self.train_loader):
+		for batch_idx, (images_curr, images_next, labels_next) in enumerate(self.train_loader):
 			torch.cuda.empty_cache()
-			accuracy, class_loss, conf_mat, vae_loss, kld, mse = self.trainBatch(batch_idx, images, labels)
+			accuracy, nll_loss, conf_mat, loss, kld = self.trainBatch(batch_idx, images_curr, images_next, labels_next)
 			
-			minibatch_losses_class += class_loss
-			minibatch_losses_vae += vae_loss
+			minibatch_losses_classification += nll_loss
+			minibatch_losses += loss
 			minibatch_kld += kld
-			minibatch_mse += mse
 			minibatch_accuracy += accuracy
 			cm += conf_mat
 			
@@ -141,31 +174,22 @@ class Trainer(object):
 		
 		pbt.close()
 		
-<<<<<<< HEAD
-		minibatch_losses_class /= self.trainset_size
-		minibatch_losses_vae /= self.trainset_size
-		minibatch_mse /= self.trainset_size
+		minibatch_losses_classification /= self.trainset_size
+		minibatch_losses /= self.trainset_size
 		minibatch_kld /= self.trainset_size
 		minibatch_accuracy /= self.trainset_size
 		
-=======
 		minibatch_losses /= len(train_indices)
 		minibatch_accuracy /= len(train_indices)
-			
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
+		
 		# Plot losses
-		self.writer.add_scalar('train_classification_loss', minibatch_losses_class, self.curr_epoch)
-		self.writer.add_scalar('train_vae_loss', minibatch_losses_vae, self.curr_epoch)
-		self.writer.add_scalar('train_reconstruction_loss', minibatch_mse, self.curr_epoch)
+		self.writer.add_scalar('train_classification_loss', minibatch_losses_classification, self.curr_epoch)
+		self.writer.add_scalar('train_loss', minibatch_losses, self.curr_epoch)
 		self.writer.add_scalar('train_KL_divergence', minibatch_kld, self.curr_epoch)
 		self.writer.add_scalar('train_accuracy', minibatch_accuracy, self.curr_epoch)
 		
 		# Plot confusion matrices
-<<<<<<< HEAD
-		plot_confusion_matrix(cm, location=self.expt_folder, title='VAE on Train Set')
-=======
-		plot_confusion_matrix(cm, location=self.expt_folder, title='CNN on Train Set')
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
+		plot_confusion_matrix(cm, location=self.expt_folder, title='probCNN on Train Set')
 		
 		# F1 Score
 		f1_score = calculateF1Score(cm)
@@ -173,34 +197,26 @@ class Trainer(object):
 		print('F1 Score : ', f1_score)
 		
 		# plot ROC curve
-<<<<<<< HEAD
 		# plotROC(cm, location=self.expt_folder, title='ROC Curve(Train)')
 		
-		return minibatch_accuracy, minibatch_losses_class, minibatch_losses_vae, minibatch_mse, minibatch_kld, f1_score
-=======
+		return minibatch_accuracy, minibatch_losses_classification, minibatch_losses, minibatch_kld, f1_score
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Train)')
 		
-		return (minibatch_accuracy, minibatch_losses, f1_score)
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
+		#return (minibatch_accuracy, minibatch_losses, f1_score)
 	
-	def trainBatch(self, batch_idx, images, labels):
-		images = Variable(images).cuda()
-		labels = Variable(labels).cuda()
-		labels = labels.view(-1, )
+	def trainBatch(self, batch_idx, images_curr, images_next, labels_next):
+		images_curr = Variable(images_curr).cuda()
+		images_next = Variable(images_next).cuda()
+		labels_next = Variable(labels_next).cuda()
+		labels_next = labels_next.view(-1, )
 		
 		# Forward + Backward + Optimize
-<<<<<<< HEAD
-=======
 		self.optimizer.zero_grad()
-		outputs, _ = self.model(images)
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
-		
-		# x_hat is reconstructed image, p_hat is predicted classification probability
-		_, _, mu, logvar, x_hat, p_hat = self.model(images)
-		classification_loss = self.classification_criterion(p_hat, labels)
-		vae_loss, mse, kld = self.vae_loss(x_hat, images, mu, logvar)
-		
-		loss = classification_loss + params['train']['lambda'] * vae_loss
+		mu_prior, std_prior = self.prior(images_curr)
+		mu_posterior, std_posterior = self.posterior(images_next, labels_next)
+		labels_prob_next_pred = self.model(False, images_curr, images_next, labels_next)
+
+		loss, nll, kld = self.loss(labels_prob_next_pred, labels_next, mu_prior, std_prior, mu_posterior, std_posterior)
 		
 		self.optimizer.zero_grad()
 		# classification_loss.backward(retain_graph=True)
@@ -209,32 +225,30 @@ class Trainer(object):
 		self.optimizer.step()
 		
 		# Compute accuracy
-<<<<<<< HEAD
-		_, pred_labels = torch.max(p_hat, 1)
-=======
-		_, pred_labels = torch.max(outputs, 1)
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
-		accuracy = (labels == pred_labels).float().sum()
+		_, pred_labels_next = torch.max(labels_prob_next_pred, 1)
+		accuracy = (labels_next == pred_labels_next).float().sum()
 		
 		# Print metrics
 		if batch_idx % 100 == 0:
-			print('Epoch [%d/%d], Batch [%d/%d] Classification Loss: %.4f VAE Loss: %.4f Accuracy: %0.2f '
+			print('Epoch [%d/%d], Batch [%d/%d] Classification Loss: %.4f KL Divergence: %.4f Accuracy: %0.2f '
 				  % (self.curr_epoch, params['train']['num_epochs'],
 					 batch_idx, self.trainset_size,
-					 classification_loss.data[0],
-					 vae_loss.data[0],
+					 loss.data[0],
+					 kld.data[0],
 					 accuracy * 1.0 / params['train']['batch_size']))
 		
-		cm = updateConfusionMatrix(labels.data.cpu().numpy(), pred_labels.data.cpu().numpy())
+		cm = updateConfusionMatrix(labels_next.data.cpu().numpy(), pred_labels_next.data.cpu().numpy())
 		
 		# clean GPU
-		del images, labels, x_hat, p_hat, _, pred_labels, mu, logvar
+		del images_curr, images_next, labels_next, labels_prob_next_pred, pred_labels_next, mu_prior, mu_posterior, \
+			std_prior, std_posterior
 		
-		self.writer.add_scalar('minibatch_classification_loss', np.mean(classification_loss.data[0]), self.batchstep)
-		self.writer.add_scalar('minibatch_vae_loss', np.mean(vae_loss.data[0]), self.batchstep)
+		self.writer.add_scalar('minibatch_NLL', np.mean(nll.data[0]), self.batchstep)
+		self.writer.add_scalar('minibatch_KLD', np.mean(kld.data[0]), self.batchstep)
+		self.writer.add_scalar('minibatch_loss', np.mean(loss.data[0]), self.batchstep)
 		self.batchstep += 1
 		
-		return accuracy, classification_loss.data[0], cm, vae_loss.data[0], kld.data[0], mse.data[0]
+		return accuracy, nll.data[0], cm, loss.data[0], kld.data[0]
 	
 	def validate(self):
 		self.model.eval()
@@ -248,13 +262,10 @@ class Trainer(object):
 		
 		for i, (images, labels) in enumerate(self.valid_loader):
 			img = Variable(images, volatile=True).cuda()
-<<<<<<< HEAD
 			_, _, mu, logvar, x_hat, p_hat = self.model(img)
 			_, predicted = torch.max(p_hat.data, 1)
-=======
 			outputs, _ = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 			labels = labels.view(-1, )
 			correct += ((predicted.cpu() == labels).float().sum())
 			
@@ -269,14 +280,11 @@ class Trainer(object):
 		
 		pb.close()
 		
-<<<<<<< HEAD
 		correct /= self.validset_size
 		mse /= self.validset_size
 		kld /= self.validset_size
 		loss /= self.validset_size
-=======
 		correct /= len(valid_indices)
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		print('Validation Accuracy : %0.6f' % correct)
 		
@@ -294,28 +302,22 @@ class Trainer(object):
 		# print('KLD : ', kld)
 		
 		# Plot confusion matrices
-<<<<<<< HEAD
 		plot_confusion_matrix(cm, location=self.expt_folder, title='VAE on Validation Set')
-=======
 		plot_confusion_matrix(cm, location=self.expt_folder, title='CNN on Validation Set')
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		# F1 Score
 		f1_score = calculateF1Score(cm)
 		self.writer.add_scalar('valid_f1_score', f1_score, self.curr_epoch)
-<<<<<<< HEAD
 		print('F1 Score : ', calculateF1Score(cm))
 		self.valid_f1_Score.append(f1_score)
 	
 	# plot ROC curve
 	# plotROC(cm, location=self.expt_folder, title='ROC Curve(Valid)')
-=======
 		print('F1 Score : ',f1_score)
 		self.valid_f1_Score.append(f1_score)
 		
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Valid)')
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 	
 	def test(self, test_loader):
 		self.model.eval()
@@ -339,15 +341,12 @@ class Trainer(object):
 		
 		for i, (images, labels) in enumerate(test_loader):
 			img = Variable(images, volatile=True).cuda()
-<<<<<<< HEAD
 			enc_emb, cls_emb, _, _, _, p_hat = self.model(img)
 			_, predicted = torch.max(p_hat.data, 1)
-=======
 			outputs, features = self.model(img)
 			#outputs = outputs.exp()
 			#print(outputs.size(), features.size())
 			_, predicted = torch.max(outputs.data, 1)
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 			labels = labels.view(-1, )
 			correct += ((predicted.cpu() == labels).float().sum())
 			
@@ -358,7 +357,6 @@ class Trainer(object):
 			
 			del img
 			pb.update(1)
-<<<<<<< HEAD
 			p_hat = torch.exp(p_hat)
 			
 			encoder_embedding.extend(np.array(enc_emb.data.cpu().numpy()))
@@ -371,45 +369,35 @@ class Trainer(object):
 		
 		correct /= self.testset_size
 		test_losses /= self.testset_size
-=======
-			outputs = torch.exp(outputs)
+		outputs = torch.exp(outputs)
 		
-			embedding.extend(np.array(features.data.cpu().numpy()))
-			pred_labels.extend(np.array(predicted.cpu().numpy()))
-			act_labels.extend(np.array(labels.numpy()))
-			class_prob.extend(np.array(outputs.data.cpu().numpy()))
+		embedding.extend(np.array(features.data.cpu().numpy()))
+		pred_labels.extend(np.array(predicted.cpu().numpy()))
+		act_labels.extend(np.array(labels.numpy()))
+		class_prob.extend(np.array(outputs.data.cpu().numpy()))
 		
 		pb.close()
 		
 		correct /= len(test_indices)
 		test_losses /= len(test_indices)
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		print('Test Accuracy : %0.6f' % correct)
 		print('Test Losses : %0.6f' % test_losses)
 		
 		# Plot confusion matrices
-<<<<<<< HEAD
 		plot_confusion_matrix(cm, location=self.expt_folder, title='VAE on Test Set')
-=======
 		plot_confusion_matrix(cm, location=self.expt_folder, title='CNN on Test Set')
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		
 		# F1 Score
 		print('F1 Score : ', calculateF1Score(cm))
 		
 		# plot PCA or tSNE
-<<<<<<< HEAD
 		encoder_embedding = np.array(encoder_embedding)
 		classifier_embedding = np.array(classifier_embedding)
-=======
 		embedding = np.array(embedding)
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
 		pred_labels = np.array(pred_labels)
 		act_labels = np.array(act_labels)
 		class_prob = np.array(class_prob)
-		
-<<<<<<< HEAD
 		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder,
 					   title='encoder_embedding_test')
 		plot_embedding(encoder_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
@@ -474,13 +462,11 @@ class Trainer(object):
 					   title='classifier_embedding_test')
 		plot_embedding(classifier_embedding, act_labels, pred_labels, mode='pca', location=self.expt_folder,
 					   title='classifier_embedding_test')
-	'''
-=======
+	
 		plot_embedding(embedding, act_labels, pred_labels, mode='tsne', location=self.expt_folder)
 		plot_embedding(embedding, act_labels, pred_labels, mode='pca', location = self.expt_folder)
 		
 		# plot ROC curve
 		#plotROC(cm, location=self.expt_folder, title='ROC Curve(Test)')
 		plotROC(act_labels, class_prob, location=self.expt_folder, title='ROC (CNN on Test Set)')
-		
->>>>>>> ee99f962c76e0d2acc66becea92a478735c3a61a
+	'''
