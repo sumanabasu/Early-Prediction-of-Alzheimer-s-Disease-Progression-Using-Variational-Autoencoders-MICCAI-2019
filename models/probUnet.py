@@ -1,7 +1,7 @@
 import  torch
 import torch.nn as nn
-from configurations.modelConfig import posterior_layer_config, prior_layer_config, generator_layer_config
-from torch.distributions.normal import Normal
+from configurations.modelConfig import posterior_layer_config, prior_layer_config, generator_layer_config, num_classes
+#from torch.distributions.normal import Normal
 from torch.autograd import Variable
 
 class posterior(nn.Module):
@@ -35,13 +35,21 @@ class posterior(nn.Module):
 		self.bn3 = nn.BatchNorm3d(posterior_layer_config['conv3']['out_channels'])
 		self.bn4 = nn.BatchNorm3d(posterior_layer_config['conv4']['out_channels'])
 		
-		self.fc_mean = nn.Linear(posterior_layer_config['gaussian'], posterior_layer_config['z_dim'])
-		self.fc_var = nn.Linear(posterior_layer_config['gaussian'], posterior_layer_config['z_dim'])
+		self.fc_mean = nn.Linear(posterior_layer_config['gaussian']  + num_classes, posterior_layer_config['z_dim'])
+		self.fc_var = nn.Linear(posterior_layer_config['gaussian']  + num_classes, posterior_layer_config['z_dim'])
 		
 		self.maxpool = nn.MaxPool3d(posterior_layer_config['maxpool3d']['ln']['kernel'], posterior_layer_config['maxpool3d'][
 			'ln']['stride'], ceil_mode=True)
 		
 		self.relu = nn.ReLU()
+	
+	def oneHot(self, label):
+		#label = label.view(label.size(0), 1)
+		label = label.unsqueeze(1)
+		onehot = torch.zeros(label.size(0), num_classes)
+		onehot.scatter_(1, label.data.cpu(), 1)
+		onehot = Variable(onehot).cuda()
+		return onehot
 		
 	def forward(self, x_t_plus_1, y_t_plus_1):
 		
@@ -54,7 +62,10 @@ class posterior(nn.Module):
 		flat_feature = feature.view(feature.size(0), -1)
 		
 		#append one hot encoded label to the extracted feature vector
-		z_concatenated = torch.cat([flat_feature, y_t_plus_1], dim=0)
+		#onehot encode labels
+		y_t_plus_1 = self.oneHot(y_t_plus_1)
+		z_concatenated = torch.cat([flat_feature, y_t_plus_1], dim=1)
+		#print(z_concatenated.size())
 		
 		mu = self.fc_mean(z_concatenated)
 		var = self.fc_var(z_concatenated)
@@ -142,23 +153,23 @@ class generator(nn.Module):
 		self.relu = nn.ReLU()
 		self.logsoftmax = nn.LogSoftmax(dim=1)
 	
-	def reparametrize(self, mu, logvar):
-		sigma = torch.exp(0.5 * logvar)
-		eps = Variable(torch.randn(mu.size())).cuda()
-		z = mu + sigma * eps
-		return z
-	
 	def forward(self, z):
 		z = (self.relu(self.fc1(z)))
 		prob = self.logsoftmax(self.fc2(z))
 		return prob
 	
-class probCNN(nn.Module, prior, posterior, generator):
-	def __init__(self):
+class probCNN(nn.Module):
+	def __init__(self, prior, posterior, generator):
 		super(probCNN, self).__init__()
 		self.prior = prior
 		self.posterior = posterior
 		self.generator = generator
+		
+	def reparametrize(self, mu, logvar):
+		sigma = torch.exp(0.5 * logvar)
+		eps = Variable(torch.randn(mu.size())).cuda()
+		z = mu + sigma * eps
+		return z
 		
 	def forward(self, inference, x_t = None, x_t_plus_1 = None, y_t_plus_1 = None):
 		if inference:
@@ -166,10 +177,10 @@ class probCNN(nn.Module, prior, posterior, generator):
 		else:
 			mu, var = self.posterior(x_t_plus_1, y_t_plus_1)
 			
-		z = self.generator.reparametrize(mu, var)
-		y_hat_t_plus_1 = self.generator(z)
+		z = self.reparametrize(mu, var)
+		p_hat_t_plus_1 = self.generator(z)
 		
-		return y_hat_t_plus_1
+		return p_hat_t_plus_1
 		
 		
 		
