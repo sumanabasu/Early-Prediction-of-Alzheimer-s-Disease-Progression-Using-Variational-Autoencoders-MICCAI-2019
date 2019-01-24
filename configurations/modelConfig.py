@@ -218,8 +218,7 @@ params = {
 	},
 	
 	'train'	:	{
-		'model'				: 'VAE',
-		'model'				: 'CNN',
+		'model'				: 'probUNetE',
 		#'timestamp'			: 'NextLabel',	#'CurrLabel'
 		'seed'				: 42,
 		'learning_rate' 	: 0.0001,
@@ -227,9 +226,8 @@ params = {
 		'batch_size' 		: 2,
 		'label_weights' 	: class_weight,
 		'lambda'			: 1,
-		'batch_size' 		: 4,
-		'label_weights' 	: class_weight,
-		'lr_schedule'		: [15, 25, 35]
+		'lr_schedule'		: [15, 25, 35],
+		'epsilon'			: 0.001 #for numerical stablity
 	}
 }
 

@@ -3,7 +3,7 @@ import os
 from configurations.paths import paths, file_names
 from configurations.modelConfig import layer_config, params, data_aug
 
-from data.dataLoader import dataLoader
+from data.dataLoader import dataLoader, run_test_
 
 from models.probUnet import prior, posterior, generator, probCNN
 from train import Trainer
@@ -12,6 +12,7 @@ import torch
 
 def main():
 	torch.multiprocessing.set_sharing_strategy('file_system')
+	#torch.backends.cudnn.enabled = False
 	# create the experiment dirs
 	timestr = time.strftime("%Y%m%d-%H%M%S")
 	base_folder = paths['output']['base_folder']
@@ -29,6 +30,8 @@ def main():
 	posterior_network = posterior()
 	generator_network = generator()
 	model = probCNN(prior_network, posterior_network, generator_network)
+	#prior_network.volatile = True; posterior_network.volatile = True; generator_network.volatile = True;
+	#model.volatile = True
 	
 	'''
 	pretrained_dict = torch.load(
@@ -66,5 +69,5 @@ def main():
 	trainer.test(test_loader)
 	
 if __name__ == '__main__':
-	#run_tests()
+	#run_test_()
 	main()

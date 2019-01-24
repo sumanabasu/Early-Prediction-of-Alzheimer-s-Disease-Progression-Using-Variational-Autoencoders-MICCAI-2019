@@ -126,7 +126,7 @@ def dataLoader(hdf5_file, trans):
 	
 	return (train_loader, valid_loader, test_loader)
 
-'''
+
 def run_test_():
 	from configurations.modelConfig import data_aug
 	max_epochs = 1
@@ -138,33 +138,18 @@ def run_test_():
 	
 	from tqdm import tqdm
 	
-	indices = []
-	img_sums = []
-	img_sums_before_float = []
-	filenames = []
-	
 	for ep in range(max_epochs):
 		print('Epoch ' + str(ep) + ' out of ' + str(max_epochs))
 		
-		pbt = tqdm(total=len(test_loader))
+		pbt = tqdm(total=len(train_loader))
 		
-		for batch_idx, (curr_images, next_images, next_labels, index, sum_, fn) in enumerate(test_loader):
-			#print('batch ' + str(batch_idx) + ' out of ' + str(len(train_loader)))
-			indices.extend(index)
-			img_sums_before_float.extend(sum_)
-			images = images.view(images.size(0), -1)
-			#print(images.shape)
-			img_sums.extend(torch.sum(images, dim=1))
-			#print(images.max(), images.min())
-			filenames.extend(fn)
+		for batch_idx, (curr_images, next_images, next_labels) in enumerate(train_loader):
+
+			print(batch_idx, curr_images.size(), next_images.size(), next_labels.size())
 			pbt.update(1)
 		pbt.close()
-		
-		#print(indices)
-		#print(img_sums)
-		#print(img_sums_before_float)
-		#print(filenames)
-'''
+
+
 
 '''
 def run_tests():

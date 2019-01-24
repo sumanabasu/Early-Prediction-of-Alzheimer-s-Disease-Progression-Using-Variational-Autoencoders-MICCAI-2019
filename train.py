@@ -45,7 +45,7 @@ class Trainer(object):
 		self.valid_loader = valid_loader
 		self.optimizer = torch.optim.Adam(model.parameters(),
 										  lr=params['train']['learning_rate'])
-		self.classification_criterion = nn.NLLLoss(weight=torch.FloatTensor(params['train']['label_weights']).cuda())
+		self.classification_criterion = nn.NLLLoss().cuda()
 		#self.crossentropy_loss = nn.CrossEntropyLoss()
 		
 		self.curr_epoch = 0
@@ -74,41 +74,27 @@ class Trainer(object):
 		Implemented as in : https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
 		{D_{\text{KL}}({\mathcal {N}}_{0}\parallel {\mathcal {N}}_{1})={\frac {1}{2}}\left(\operatorname {tr} \left(\Sigma _{1}^{-1}\Sigma _{0}\right)+(\mu _{1}-\mu _{0})^{\mathsf {T}}\Sigma _{1}^{-1}(\mu _{1}-\mu _{0})-k+\ln \left({\frac {\det \Sigma _{1}}{\det \Sigma _{0}}}\right)\right).}
 		'''
-
-		'''
-		dim = mu_prior.size()[1]
-		print(dim)
 		
-		for var_pre, var_post, mu_pre, mu_post in var_prior, var_posterior, mu_prior, mu_posterior:
-			covar_prior = torch.diag(var_pre)
-			covar_posterior = torch.diag(var_post)
-			
-			covar_posterior_inv = torch.inverse(covar_posterior) #TODO: http://mathonline.wikidot.com/inverse-of-diagonal-matrices
-			mean_diff = mu_post - mu_pre
-			
-			# determinant of diagonal matrix is product of all elements (
-			# https://proofwiki.org/wiki/Determinant_of_Diagonal_Matrix)
-			det_pre = torch.prod(var_pre)
-			det_post = torch.prod(var_post)
-			
-			term1 = torch.trace(torch.matmul(covar_posterior_inv, covar_prior))
-			term2 = torch.matmul(torch.matmul(mean_diff.T, covar_posterior_inv), mean_diff)
-			term3 = torch.log(det_post) - torch.log(det_pre)
-			
-			kld = 0.5 * (term1 + term2 - dim + term3)
-		return kld
-		'''
-		
-		term1 = torch.trace(var_prior/var_posterior)
-		term2 = torch.sum((mu_posterior - mu_prior).pow(2) / var_posterior)
-		term3 = torch.log(torch.prod(var_posterior)) - torch.log(torch.prod(var_prior))
-		return 0.5 * (term1 + term2 - latent_dim + term3)
-		
+		term1 = torch.clamp(torch.trace(var_prior/var_posterior), min = -1000, max = 1000)
+		term2 = torch.clamp(torch.sum((mu_posterior - mu_prior).pow(2) / var_posterior), min = -1000, max = 1000)
+		term3 = torch.log(torch.prod(var_posterior)  + params['train']['epsilon']) - torch.log(torch.prod(var_prior) + params['train']['epsilon'])
+		torch.clamp(term3, min=-1000, max=1000)
+		# print('term 1 :', term1, 'term 2 :', term2, 'term 3:', term3, 'term 3 part 1:', torch.log(torch.prod(
+		# 	var_posterior) + params['train']['epsilon']), 'term 3 part 2: ', torch.log(torch.prod(var_prior) +
+		# 																			   params['train']['epsilon']))
+		kl = 0.5 * (term1 + term2 - latent_dim + term3)
+		torch.clamp(kl, min=-1000, max=1000)
+		return  kl
+		# return 0.5 * (term1 + term2 - latent_dim + term3) # fails because of term3, which is infinite
+		# return 0.5 * (term1 + term2 - latent_dim)
 	
 	# self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
 	def loss(self, p_hat_t_plus_1, y_t_plus_1, mu_prior, std_prior, mu_posterior, std_posterior):
+		# print('inside loss : ', p_hat_t_plus_1, y_t_plus_1, mu_prior, std_prior, mu_posterior, std_posterior)
 		NLL = self.classification_criterion(p_hat_t_plus_1, y_t_plus_1)
+		# print('NLL :', NLL)
 		KLD = self.klDivergence(mu_prior, std_prior, mu_posterior, std_posterior)
+		# print('KLD :', KLD)
 		
 		return NLL + KLD, NLL, KLD
 	
@@ -119,8 +105,8 @@ class Trainer(object):
 		self.train_losses, self.train_f1_Score, self.valid_losses, self.valid_f1_Score, self.train_accuracy, \
 		self.valid_accuracy = ([] for i in range(6))
 	
-	def train(self):
-		scheduler = MultiStepLR(self.optimizer, milestones=params['train']['lr_schedule'], gamma=0.1)	# [40, 60] earlier
+	# def train(self):
+	# 	scheduler = MultiStepLR(self.optimizer, milestones=params['train']['lr_schedule'], gamma=0.1)	# [40, 60] earlier
 		
 		for _ in range(params['train']['num_epochs']):
 			print('Training...\nEpoch : ' + str(self.curr_epoch))
@@ -161,6 +147,8 @@ class Trainer(object):
 		minibatch_kld = 0
 		
 		for batch_idx, (images_curr, images_next, labels_next) in enumerate(self.train_loader):
+			# print('batch id :', batch_idx)
+			# print('label :', labels_next)
 			torch.cuda.empty_cache()
 			accuracy, nll_loss, conf_mat, loss, kld = self.trainBatch(batch_idx, images_curr, images_next, labels_next)
 			
@@ -208,7 +196,8 @@ class Trainer(object):
 		images_curr = Variable(images_curr).cuda()
 		images_next = Variable(images_next).cuda()
 		labels_next = Variable(labels_next).cuda()
-		labels_next = labels_next.view(-1, )
+		labels_next = labels_next.contiguous().view(-1, )
+		# print('label (inside trainBatch:', labels_next)
 		
 		# Forward + Backward + Optimize
 		self.optimizer.zero_grad()
@@ -220,12 +209,14 @@ class Trainer(object):
 		
 		self.optimizer.zero_grad()
 		# classification_loss.backward(retain_graph=True)
+		#import pdb; pdb.set_trace()
 		loss.backward()
 		
 		self.optimizer.step()
 		
 		# Compute accuracy
 		_, pred_labels_next = torch.max(labels_prob_next_pred, 1)
+		# print('pred :', pred_labels_next)
 		accuracy = (labels_next == pred_labels_next).float().sum()
 		
 		# Print metrics
@@ -266,7 +257,7 @@ class Trainer(object):
 			_, predicted = torch.max(p_hat.data, 1)
 			outputs, _ = self.model(img)
 			_, predicted = torch.max(outputs.data, 1)
-			labels = labels.view(-1, )
+			labels = labels.contiguous().view(-1, )
 			correct += ((predicted.cpu() == labels).float().sum())
 			
 			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())
@@ -347,7 +338,7 @@ class Trainer(object):
 			#outputs = outputs.exp()
 			#print(outputs.size(), features.size())
 			_, predicted = torch.max(outputs.data, 1)
-			labels = labels.view(-1, )
+			labels = labels.contiguous().view(-1, )
 			correct += ((predicted.cpu() == labels).float().sum())
 			
 			cm += updateConfusionMatrix(labels.numpy(), predicted.cpu().numpy())

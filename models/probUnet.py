@@ -59,12 +59,12 @@ class posterior(nn.Module):
 		feature = (self.relu(self.bn3(self.maxpool(self.conv3(feature)))))
 		feature = (self.relu(self.bn4(self.maxpool(self.conv4(feature)))))
 		# flatten
-		flat_feature = feature.view(feature.size(0), -1)
+		flat_feature = feature.contiguous().view(feature.size(0), -1)
 		
 		#append one hot encoded label to the extracted feature vector
 		#onehot encode labels
-		y_t_plus_1 = self.oneHot(y_t_plus_1)
-		z_concatenated = torch.cat([flat_feature, y_t_plus_1], dim=1)
+		y_t_plus_1_oneHot = self.oneHot(y_t_plus_1)
+		z_concatenated = torch.cat([flat_feature, y_t_plus_1_oneHot], dim=1)
 		#print(z_concatenated.size())
 		
 		mu = self.fc_mean(z_concatenated)
@@ -129,7 +129,7 @@ class prior(nn.Module):
 		feature = (self.relu(self.bn3(self.maxpool(self.conv3(feature)))))
 		feature = (self.relu(self.bn4(self.maxpool(self.conv4(feature)))))
 		# flatten
-		z_flat = feature.view(feature.size(0), -1)
+		z_flat = feature.contiguous().view(feature.size(0), -1)
 		
 		mu = self.fc_mean(z_flat)
 		var = self.fc_var(z_flat)
@@ -165,8 +165,8 @@ class probCNN(nn.Module):
 		self.posterior = posterior
 		self.generator = generator
 		
-	def reparametrize(self, mu, logvar):
-		sigma = torch.exp(0.5 * logvar)
+	def reparametrize(self, mu, var):
+		sigma = torch.exp(0.5 * var)
 		eps = Variable(torch.randn(mu.size())).cuda()
 		z = mu + sigma * eps
 		return z
@@ -179,12 +179,11 @@ class probCNN(nn.Module):
 			
 		z = self.reparametrize(mu, var)
 		p_hat_t_plus_1 = self.generator(z)
+		# print('inside model', p_hat_t_plus_1)
 		
 		return p_hat_t_plus_1
 		
-		
-		
-		
+
 	
 	
 	
