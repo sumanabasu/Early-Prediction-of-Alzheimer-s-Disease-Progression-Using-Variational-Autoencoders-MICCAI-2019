@@ -16,7 +16,8 @@ paths = {
 		'Raw_MRI_location'						: 	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/ADNI_mnc/*.mnc'
 	},
 	'output'	:	{
-		'base_folder'							:	'/home/ml/sbasu11/Documents/ADNI Project/ADNI_data/LabelDistribution/Outputs/'
+		'base_folder'							:	'/home/ml/sbasu11/Documents/ADNI '
+													  'Project/ADNI_data/LabelDistribution/Outputs/'
 	}
 }
 

@@ -18,8 +18,10 @@ from utils.visualizations import plotROC
 import pickle
 from configurations.paths import paths, file_names
 import os
-#from torch.distributions.normal import Normal
-#from torch.distributions.kl import kl_divergence
+from torch.distributions.multivariate_normal import MultivariateNormal
+from torch.distributions.normal import Normal
+from torch.distributions.kl import kl_divergence
+import pdb
 
 train_indices = pickle.load(open(os.path.join(paths['data']['Input_to_Training_Model'],
 											  file_names['data']['Train_set_indices']), 'r'))
@@ -61,40 +63,49 @@ class Trainer(object):
 		
 		self.trainset_size, self.validset_size, self.testset_size = getIndicesTrainValidTest(requireslen=True)
 	
-	def klDivergence(self, mu_prior, var_prior, mu_posterior, var_posterior):
-		# D_KL(Q(z|X) || P(z|X))
-		# P(z|X) is the real distribution, Q(z|X) is the distribution we are trying to approximate P(z|X) with
-		# calculate in closed form
-		'''
-		# from torch.distributions.kl import kl_divergence not available in torch 0.3.1
-		prior_distribution = Normal(mu_prior, std_prior)
-		posterior_distribution = Normal(mu_posterior, std_posterior)
-		return kl_divergence(prior_distribution, posterior_distribution)
-		return kl_divergence(prior_distribution, posterior_distribution)
-		Implemented as in : https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
-		{D_{\text{KL}}({\mathcal {N}}_{0}\parallel {\mathcal {N}}_{1})={\frac {1}{2}}\left(\operatorname {tr} \left(\Sigma _{1}^{-1}\Sigma _{0}\right)+(\mu _{1}-\mu _{0})^{\mathsf {T}}\Sigma _{1}^{-1}(\mu _{1}-\mu _{0})-k+\ln \left({\frac {\det \Sigma _{1}}{\det \Sigma _{0}}}\right)\right).}
-		'''
+	# def klDivergence(self, mu_prior, var_prior, mu_posterior, var_posterior):
+	# 	# D_KL(Q(z|X) || P(z|X))
+	# 	# P(z|X) is the real distribution, Q(z|X) is the distribution we are trying to approximate P(z|X) with
+	# 	# calculate in closed form
+	#
+	# 	# from torch.distributions.kl import kl_divergence not available in torch 0.3.1
+	# 	# pdb.set_trace()
+	# 	var_prior = torch.exp(var_prior)
+	# 	var_posterior = torch.exp(var_posterior)
+	# 	# prior_distribution = MultivariateNormal(mu_prior, torch.diag_embed(var_prior))
+	# 	# posterior_distribution = MultivariateNormal(mu_posterior, torch.diag_embed(var_posterior))
+	# 	prior_distribution = Normal(mu_prior, torch.sqrt(var_prior))
+	# 	posterior_distribution = Normal(mu_posterior, torch.sqrt(var_posterior))
+	# 	return kl_divergence(prior_distribution, posterior_distribution)
+		# Implemented as in : https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+		# {D_{\text{KL}}({\mathcal {N}}_{0}\parallel {\mathcal {N}}_{1})={\frac {1}{2}}\left(\operatorname {tr} \left(\Sigma _{1}^{-1}\Sigma _{0}\right)+(\mu _{1}-\mu _{0})^{\mathsf {T}}\Sigma _{1}^{-1}(\mu _{1}-\mu _{0})-k+\ln \left({\frac {\det \Sigma _{1}}{\det \Sigma _{0}}}\right)\right).}
 		
-		term1 = torch.clamp(torch.trace(var_prior/var_posterior), min = -1000, max = 1000)
-		term2 = torch.clamp(torch.sum((mu_posterior - mu_prior).pow(2) / var_posterior), min = -1000, max = 1000)
-		term3 = torch.log(torch.prod(var_posterior)  + params['train']['epsilon']) - torch.log(torch.prod(var_prior) + params['train']['epsilon'])
-		torch.clamp(term3, min=-1000, max=1000)
-		# print('term 1 :', term1, 'term 2 :', term2, 'term 3:', term3, 'term 3 part 1:', torch.log(torch.prod(
-		# 	var_posterior) + params['train']['epsilon']), 'term 3 part 2: ', torch.log(torch.prod(var_prior) +
-		# 																			   params['train']['epsilon']))
-		kl = 0.5 * (term1 + term2 - latent_dim + term3)
-		torch.clamp(kl, min=-1000, max=1000)
-		return  kl
-		# return 0.5 * (term1 + term2 - latent_dim + term3) # fails because of term3, which is infinite
-		# return 0.5 * (term1 + term2 - latent_dim)
+		#
+		# print(var_prior.size(), var_posterior.size())
+		# term1 = torch.trace(var_prior/var_posterior)
+		# term2 = torch.sum((mu_posterior - mu_prior).pow(2) / var_posterior)
+		# term31 = torch.prod(var_posterior)
+		# term31 = torch.clamp(term31, min=-100, max = 100) + params['train']['epsilon']
+		# term32 = torch.prod(var_prior)  + params['train'][ 'epsilon']
+		# print('term31 :', term31, 'term32 :', term32)
+		# term3 = torch.log(term31  / term32)
+		# term3 = torch.clamp(term3, min=-100, max = 100)
+		# # print('term 1 :', term1, 'term 2 :', term2, 'term 3:', term3, 'term 3 part 1:', torch.log(torch.prod(
+		# #  	var_posterior) + params['train']['epsilon']), 'term 3 part 2: ', torch.log(torch.prod(var_prior) +
+		# # 																		   params['train']['epsilon']),
+		# # 	  'latent :', latent_dim)
+		# kl = 0.5 * (term1 + term2 - latent_dim + term3)
+		# return  kl
+		# # return 0.5 * (term1 + term2 - latent_dim + term3) # fails because of term3, which is infinite
+		# # return 0.5 * (term1 + term2 - latent_dim)
 	
 	# self.lambda_ = 1	#hyper-parameter to control regularizer by reconstruction loss
-	def loss(self, p_hat_t_plus_1, y_t_plus_1, mu_prior, std_prior, mu_posterior, std_posterior):
+	def loss(self, p_hat_t_plus_1, y_t_plus_1, prior_distribution, posterior_distribution):
 		# print('inside loss : ', p_hat_t_plus_1, y_t_plus_1, mu_prior, std_prior, mu_posterior, std_posterior)
 		NLL = self.classification_criterion(p_hat_t_plus_1, y_t_plus_1)
 		# print('NLL :', NLL)
-		KLD = self.klDivergence(mu_prior, std_prior, mu_posterior, std_posterior)
-		# print('KLD :', KLD)
+		KLD = torch.sum(kl_divergence(prior_distribution, posterior_distribution))
+		print('KLD :', KLD.item())
 		
 		return NLL + KLD, NLL, KLD
 	
@@ -113,12 +124,10 @@ class Trainer(object):
 			scheduler.step()
 			
 			# Train Model
-			accuracy, classification_loss, vae_loss, mse, kld, f1_score = self.trainEpoch()
-			accuracy, loss, f1_score = self.trainEpoch()
+			accuracy, classification_loss, vae_loss, kld, f1_score = self.trainEpoch()
 			
 			self.train_losses_class.append(classification_loss)
 			self.train_losses_vae.append(vae_loss)
-			self.train_mse.append(mse)
 			self.train_kld.append(kld)
 			self.train_accuracy.append(accuracy)
 			self.train_f1_Score.append(f1_score)
@@ -201,11 +210,11 @@ class Trainer(object):
 		
 		# Forward + Backward + Optimize
 		self.optimizer.zero_grad()
-		mu_prior, std_prior = self.prior(images_curr)
-		mu_posterior, std_posterior = self.posterior(images_next, labels_next)
+		prior_distribution = self.prior(images_curr)
+		posterior_distribution = self.posterior(images_next, labels_next)
 		labels_prob_next_pred = self.model(False, images_curr, images_next, labels_next)
 
-		loss, nll, kld = self.loss(labels_prob_next_pred, labels_next, mu_prior, std_prior, mu_posterior, std_posterior)
+		loss, nll, kld = self.loss(labels_prob_next_pred, labels_next, prior_distribution, posterior_distribution)
 		
 		self.optimizer.zero_grad()
 		# classification_loss.backward(retain_graph=True)
@@ -224,22 +233,21 @@ class Trainer(object):
 			print('Epoch [%d/%d], Batch [%d/%d] Classification Loss: %.4f KL Divergence: %.4f Accuracy: %0.2f '
 				  % (self.curr_epoch, params['train']['num_epochs'],
 					 batch_idx, self.trainset_size,
-					 loss.data[0],
-					 kld.data[0],
+					 loss.item(),
+					 kld.item(),
 					 accuracy * 1.0 / params['train']['batch_size']))
 		
 		cm = updateConfusionMatrix(labels_next.data.cpu().numpy(), pred_labels_next.data.cpu().numpy())
 		
 		# clean GPU
-		del images_curr, images_next, labels_next, labels_prob_next_pred, pred_labels_next, mu_prior, mu_posterior, \
-			std_prior, std_posterior
+		del images_curr, images_next, labels_next, labels_prob_next_pred, pred_labels_next, prior_distribution, posterior_distribution
 		
-		self.writer.add_scalar('minibatch_NLL', np.mean(nll.data[0]), self.batchstep)
-		self.writer.add_scalar('minibatch_KLD', np.mean(kld.data[0]), self.batchstep)
-		self.writer.add_scalar('minibatch_loss', np.mean(loss.data[0]), self.batchstep)
+		self.writer.add_scalar('minibatch_NLL', np.mean(nll.item()), self.batchstep)
+		self.writer.add_scalar('minibatch_KLD', np.mean(kld.item()), self.batchstep)
+		self.writer.add_scalar('minibatch_loss', np.mean(loss.item()), self.batchstep)
 		self.batchstep += 1
 		
-		return accuracy, nll.data[0], cm, loss.data[0], kld.data[0]
+		return accuracy, nll.item(), cm, loss.item(), kld.item()
 	
 	def validate(self):
 		self.model.eval()

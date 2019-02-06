@@ -1,7 +1,7 @@
 import  torch
 import torch.nn as nn
 from configurations.modelConfig import posterior_layer_config, prior_layer_config, generator_layer_config, num_classes
-#from torch.distributions.normal import Normal
+from torch.distributions.normal import Normal
 from torch.autograd import Variable
 
 class posterior(nn.Module):
@@ -75,8 +75,13 @@ class posterior(nn.Module):
 		posterior_distribution = Normal(mu, var)
 		return  posterior_distribution
 		'''
+	
+		#covar = torch.diag_embed(var)
 		
-		return mu, var
+		var = torch.exp(var)
+		posterior_distribution = Normal(mu, torch.sqrt(var))
+		
+		return posterior_distribution
 
 
 class prior(nn.Module):
@@ -140,7 +145,10 @@ class prior(nn.Module):
 		return  posterior_distribution
 		'''
 		
-		return mu, var
+		var = torch.exp(var)
+		prior_distribution = Normal(mu, torch.sqrt(var))
+		
+		return prior_distribution
 	
 class generator(nn.Module):
 	'''
@@ -173,11 +181,12 @@ class probCNN(nn.Module):
 		
 	def forward(self, inference, x_t = None, x_t_plus_1 = None, y_t_plus_1 = None):
 		if inference:
-			mu, var = self.prior(x_t)
+			distribution = self.prior(x_t)
 		else:
-			mu, var = self.posterior(x_t_plus_1, y_t_plus_1)
+			distribution = self.posterior(x_t_plus_1, y_t_plus_1)
 			
-		z = self.reparametrize(mu, var)
+		z = distribution.rsample()
+		# import pdb; pdb.set_trace()
 		p_hat_t_plus_1 = self.generator(z)
 		# print('inside model', p_hat_t_plus_1)
 		

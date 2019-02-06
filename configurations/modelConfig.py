@@ -227,7 +227,7 @@ params = {
 		'label_weights' 	: class_weight,
 		'lambda'			: 1,
 		'lr_schedule'		: [15, 25, 35],
-		'epsilon'			: 0.001 #for numerical stablity
+		'epsilon'			: 0.01 #for numerical stablity
 	}
 }
 
