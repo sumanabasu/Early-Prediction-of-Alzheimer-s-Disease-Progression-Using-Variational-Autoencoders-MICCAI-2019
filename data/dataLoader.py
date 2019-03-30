@@ -5,7 +5,7 @@ import h5py
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
+from torch.utils.data.sampler import SubsetRandomSampler, SequentialSampler
 from configurations.paths import paths, file_names
 import os
 import pickle
@@ -89,7 +89,7 @@ def dataLoader(hdf5_file, trans):
 	#print(test_indices)
 	train_sampler = SubsetRandomSampler(train_indices)
 	valid_sampler = SubsetRandomSampler(valid_indices)
-	test_sampler = SubsetRandomSampler(test_indices)
+	test_sampler = SequentialSampler(test_indices)
 	
 	data = HDF5loader(hdf5_file, trans, train_indices=train_indices)
 	
