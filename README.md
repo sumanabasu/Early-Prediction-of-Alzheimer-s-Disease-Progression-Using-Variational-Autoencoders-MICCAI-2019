@@ -13,10 +13,8 @@ Paper Link: https://rdcu.be/bT8Yt
 
 The person was healthy when the MRI was taken, but got diseased after 6 months. Our VAE model correctly predicted that the person will get diseased with 91% confidence.
 
-  *
+(For more details look into the *Visualization* folder. *Visualization* folder contains the code and visualzation videos for the visualization of activation maps shown in the qualitative results.)
 
 Note : Look up the branch vae.
-
-*Visualization* folder contains the code and visualzation videos for the visualization of activation maps shown in the qualitative results.
 
 P.S.: I'll clean this repository and upload the trained models *soon*. May be releasing the code will help me procrastinate procrastination!
