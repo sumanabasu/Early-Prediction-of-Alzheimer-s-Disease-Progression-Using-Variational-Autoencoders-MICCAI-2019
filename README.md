@@ -4,10 +4,12 @@
 Paper Link: https://rdcu.be/bT8Yt
 
 ***Workflow***
- ![An image](Images/flow.png)<!-- .element height="50%" width="50%" -->
+
+ ![An image](Images/flow.png)
 
 ***Quantitative Analysis***
-![An image](Images/roc.png)<!-- .element height="50%" width="50%" -->
+
+![An image](Images/roc.png)
 
 ***Qualitative Analysis***
 
