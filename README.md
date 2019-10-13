@@ -9,7 +9,7 @@ Paper Link: https://rdcu.be/bT8Yt
 
 ***Quantitative Analysis***
 
-![alt text](Images/roc.png "ROC Curve"?raw=true)
+![alt text](Images/roc.png?raw=true)
 
 ***Qualitative Analysis***
 
