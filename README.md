@@ -9,7 +9,7 @@ Paper Link: https://rdcu.be/bT8Yt
 
 ***Quantitative Analysis***
 
-![An image](Images/roc.png){:height="24px" width="48px"}
+![](Images/roc.png){:height=50 width=50}
 
 ***Qualitative Analysis***
 
