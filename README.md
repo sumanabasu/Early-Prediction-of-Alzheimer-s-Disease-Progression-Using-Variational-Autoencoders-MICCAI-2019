@@ -2,7 +2,18 @@
 
 Paper Link: https://rdcu.be/bT8Yt
 
-![Alt text](Visualization/healthy_to_diseased.gif)
+
+***Qualitative Analysis***
+
+* Which part of the brain some of the best peforming models look at?
+
+  * When a healthy person got the disease:
+
+  ![Alt text](Visualization/healthy_to_diseased.gif)
+
+The person was healthy when the MRI was taken, but got diseased after 6 months. Our VAE model correctly predicted that the person will get diseased with 91% confidence.
+
+  *
 
 Note : Look up the branch vae.
 
