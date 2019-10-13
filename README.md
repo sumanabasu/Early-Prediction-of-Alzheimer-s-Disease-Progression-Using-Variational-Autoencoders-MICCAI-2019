@@ -5,11 +5,11 @@ Paper Link: https://rdcu.be/bT8Yt
 
 ***Workflow***
 
- ![](Images/flow.png)
+ ![alt text](Images/flow.png)
 
 ***Quantitative Analysis***
 
-![](Images/roc.png){:height=50 width=50}
+![alt text](Images/roc.png "ROC Curve")
 
 ***Qualitative Analysis***
 
