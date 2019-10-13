@@ -1,4 +1,4 @@
-### This repository has the code for the *MICCAI 2019* paper *"Early Prediction of Alzheimer’s Disease Progression Using Variational Autoencoders"*
+### Code for the *MICCAI 2019* paper *"Early Prediction of Alzheimer’s Disease Progression Using Variational Autoencoders"*
 
 Paper Link: https://rdcu.be/bT8Yt
 
