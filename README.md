@@ -2,6 +2,8 @@
 
 Paper Link: https://rdcu.be/bT8Yt
 
+![Alt text](Visualization/healthy_to_diseased.gif)
+
 Note : Look up the branch vae.
 
 *Visualization* folder contains the code and visualzation videos for the visualization of activation maps shown in the qualitative results.
