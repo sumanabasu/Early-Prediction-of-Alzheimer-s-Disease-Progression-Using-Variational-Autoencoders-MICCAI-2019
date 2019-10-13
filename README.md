@@ -16,6 +16,6 @@ The person was healthy when the MRI was taken, but got diseased after 6 months. 
 
 (For more details look into the *Visualization* folder. *Visualization* folder contains the code and visualzation videos for the visualization of activation maps shown in the qualitative results.)
 
-Note : Look up the branch vae.
+*Note : Look up the branch vae.*
 
-P.S.: I'll clean this repository and upload the trained models *soon*. May be releasing the code will help me procrastinate procrastination!
+*P.S.: I'll clean this repository and upload the trained models *soon*. May be releasing the code will help me procrastinate procrastination!*
