@@ -3,6 +3,11 @@
 
 Paper Link: https://rdcu.be/bT8Yt
 
+***Workflow***
+ ![Alt text]()
+
+***Quantitative Analysis***
+
 
 ***Qualitative Analysis***
 
@@ -18,4 +23,4 @@ The person was healthy when the MRI was taken, but got diseased after 6 months. 
 
 *Note : Look up the branch vae.*
 
-*P.S.: I'll clean this repository and upload the trained models *soon*. May be releasing the code will help me procrastinate procrastination!*
+*P.S.: I'll clean this repository and upload the trained models *soon*. May be releasing the code at its current version will motivate me procrastinate procrastination!*
