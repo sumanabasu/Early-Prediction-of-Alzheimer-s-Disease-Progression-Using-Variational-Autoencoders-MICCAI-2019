@@ -5,7 +5,7 @@ Paper Link: https://rdcu.be/bT8Yt
 
 ***Workflow***
 
- ![An image](Images/flow.png)
+ ![](Images/flow.png){width=50% }
 
 ***Quantitative Analysis***
 
