@@ -1,5 +1,16 @@
 # Early Prediction of Alzheimer’s Disease Progression Using Variational Autoencoders (MICCAI 2019)
 
+```
+Citation
+ @article{basu_wagstyl_zandifar_collins_romero_precup_2019,
+ title={Early prediction of alzheimer’s disease progression using variational autoencoders},
+ DOI={10.1007/978-3-030-32251-9_23}, journal={Lecture Notes in Computer Science},
+ author={Basu, Sumana and Wagstyl, Konrad and Zandifar, Azar and Collins, Louis and Romero, Adriana and Precup, Doina},
+ year={2019}, 
+ pages={205–213}
+ } 
+ ```
+
 ## Paper Summary
 
 _**Assumption:**_
